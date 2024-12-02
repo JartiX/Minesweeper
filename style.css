@@ -116,7 +116,7 @@ body {
 .game__cell:hover,
 .game__cell--mini:hover {
     transform: scale(1.05);
-    background-color: #bbb;
+    background-color: #c3f3ff;
 }
 
 .game__cell--open {

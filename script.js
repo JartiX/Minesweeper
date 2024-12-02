@@ -30,6 +30,9 @@ let value_colors = {
 let timeElapsed = 0;
 let timerInterval;
 
+let currentCellX = 0;
+let currentCellY = 0;
+
 function drawCells() {
     game.style.gridTemplateColumns = (width <= 20 && height <= 20) ? `repeat(${height}, 40px)` : `repeat(${height}, 20px)`
     let class_name = (width <= 20 && height <= 20) ? "game__cell" : "game__cell--mini";
@@ -124,6 +127,12 @@ function game_win() {
     game_result_container.querySelector('.game_result').innerHTML = 'Вы выиграли!';
 }
 
+function resetSelectedCell() {
+    currentCellX = 0;
+    currentCellY = 0;
+    updateSelectedCell();
+}
+
 function reset_game() {
     opened_cells = 0;
     founded_bombs = 0;
@@ -139,6 +148,7 @@ function reset_game() {
     smile.innerHTML = '🙂';
     clearInterval(timerInterval)
     drawCells();
+    resetSelectedCell()
 }
 
 function start_timer() {
@@ -216,6 +226,10 @@ game.addEventListener('click', (e) => {
         is_game_over = false;
         start_timer();
     }
+    removeSelectedCell();
+    currentCellX = x;
+    currentCellY = y;
+    updateSelectedCell();
 
     openCell(x, y);
 });
@@ -230,11 +244,90 @@ game.addEventListener('contextmenu', (e) => {
     toggleFlag(x, y);
 });
 
+function updateSelectedCell() {
+    const selectedCell = cellMap[currentCellX][currentCellY];
+    selectedCell.classList.add('game__cell--selected');
+    selectedCell.style.outline = '2px solid white';
+}
+
+function removeSelectedCell() {
+    const selectedCell = cellMap[currentCellX][currentCellY];
+    selectedCell.classList.remove('game__cell--selected');
+    selectedCell.style.outline = '';
+}
+
+document.addEventListener('keydown', (e) => {
+    switch (e.key) {
+        case 'ArrowUp':
+            if (currentCellX > 0) {
+                removeSelectedCell();
+                currentCellX--;
+                updateSelectedCell();
+            }
+            break;
+        case 'ArrowDown':
+            if (currentCellX < width - 1) {
+                removeSelectedCell();
+                currentCellX++;
+                updateSelectedCell();
+            }
+            break;
+        case 'ArrowLeft':
+            if (currentCellY > 0) {
+                removeSelectedCell();
+                currentCellY--;
+                updateSelectedCell();
+            }
+            break;
+        case 'ArrowRight':
+            if (currentCellY < height - 1) {
+                removeSelectedCell();
+                currentCellY++;
+                updateSelectedCell();
+            }
+            break;
+        case 'Enter':
+        case ' ':
+            if (is_game_over) {
+                reset_game();
+                return;
+            }
+
+            if (!gameStarted || is_game_over) {
+                placeBombs(currentCellX, currentCellY);
+                bombs_cnt.innerHTML = bombs;
+                gameStarted = true;
+                is_game_over = false;
+                start_timer();
+            }
+
+            openCell(currentCellX, currentCellY);
+            break;
+        case 'Control':
+            if (e.key === 'Control') {
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        toggleFlag(currentCellX, currentCellY);
+                    }
+                });
+            }
+            break;
+    }
+});
+
 game.addEventListener('mousedown', () => {
     smile.innerHTML = '😲';
 });
 
 game.addEventListener('mouseup', () => {
+    smile.innerHTML = '🙂';
+});
+
+smile.addEventListener('mousedown', () => {
+    smile.innerHTML = '😲';
+});
+
+smile.addEventListener('mouseup', () => {
     smile.innerHTML = '🙂';
 });
 
