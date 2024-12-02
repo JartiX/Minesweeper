@@ -1,6 +1,6 @@
 let width = 12;
 let height = 12;
-let bombs = 3;
+let bombs = 20;
 let hollow_cells = width * height - bombs;
 
 
