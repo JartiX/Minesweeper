@@ -191,6 +191,22 @@ function openCell(x, y, is_recursive_call=false) {
     }
 }
 
+function countFlagsAround(x, y) {
+    let flagCount = 0;
+    for (let dx = -1; dx <= 1; dx++) {
+        for (let dy = -1; dy <= 1; dy++) {
+            let nx = x + dx;
+            let ny = y + dy;
+            if (nx >= 0 && ny >= 0 && nx < width && ny < height) {
+                if (cellMap[nx][ny].classList.contains('game__cell--flag')) {
+                    flagCount++;
+                }
+            }
+        }
+    }
+    return flagCount;
+}
+
 function toggleFlag(x, y) {
     if (is_game_over) return;
     let cell = cellMap[x][y];
@@ -255,6 +271,37 @@ function removeSelectedCell() {
     selectedCell.classList.remove('game__cell--selected');
     selectedCell.style.outline = '';
 }
+
+function openSurroundingCells(x, y) {
+    let value = bombMap[x][y];
+    
+    if (value === countFlagsAround(x, y)) {
+        for (let dx = -1; dx <= 1; dx++) {
+            for (let dy = -1; dy <= 1; dy++) {
+                let nx = x + dx;
+                let ny = y + dy;
+                if (nx >= 0 && ny >= 0 && nx < width && ny < height) {
+                    if (!cellMap[nx][ny].classList.contains('game__cell--open') &&
+                        !cellMap[nx][ny].classList.contains('game__cell--flag')) {
+                        openCell(nx, ny);
+                    }
+                }
+            }
+        }
+    }
+}
+
+game.addEventListener('dblclick', (e) => {
+    let cell = e.target;
+    if (!cell.classList.contains('game__cell') && !cell.classList.contains('game__cell--mini')) return;
+
+    let x = parseInt(cell.dataset.x);
+    let y = parseInt(cell.dataset.y);
+
+    if (bombMap[x][y] > 0) {
+        openSurroundingCells(x, y);
+    }
+});
 
 document.addEventListener('keydown', (e) => {
     switch (e.key) {
