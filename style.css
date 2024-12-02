@@ -110,8 +110,8 @@ body {
     transition: background-color 0.2s, transform 0.2s;
 }
 .game__cell--mini {
-    width: 20px;
-    height: 20px;
+    width: 30px;
+    height: 30px;
 }
 .game__cell:hover,
 .game__cell--mini:hover {

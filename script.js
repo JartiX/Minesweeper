@@ -1,7 +1,7 @@
-let width = 12;
 let height = 12;
+let width = 12;
 let bombs = 20;
-let hollow_cells = width * height - bombs;
+let hollow_cells = height * width - bombs;
 
 
 let bombMap = [];
@@ -34,13 +34,13 @@ let currentCellX = 0;
 let currentCellY = 0;
 
 function drawCells() {
-    game.style.gridTemplateColumns = (width <= 20 && height <= 20) ? `repeat(${height}, 40px)` : `repeat(${height}, 20px)`
-    let class_name = (width <= 20 && height <= 20) ? "game__cell" : "game__cell--mini";
+    game.style.gridTemplateColumns = (height <= 20 && width <= 20) ? `repeat(${width}, 40px)` : `repeat(${width}, 30px)`
+    let class_name = (height <= 20 && width <= 20) ? "game__cell" : "game__cell--mini";
 
-    for (let x = 0; x < width; x++) {
+    for (let x = 0; x < height; x++) {
         let bombRow = [];
         let cellRow = [];
-        for (let y = 0; y < height; y++) {
+        for (let y = 0; y < width; y++) {
             let cell = document.createElement('div');
             cell.classList.add(class_name);
             cell.dataset.x = x;
@@ -57,8 +57,8 @@ function drawCells() {
 function placeBombs(firstClickX, firstClickY) {
     let placedBombs = 0;
     while (placedBombs < bombs) {
-        let rx = Math.floor(Math.random() * width);
-        let ry = Math.floor(Math.random() * height);
+        let rx = Math.floor(Math.random() * height);
+        let ry = Math.floor(Math.random() * width);
 
         if (Math.abs(rx - firstClickX) <= 1 && Math.abs(ry - firstClickY) <= 1) continue;
 
@@ -72,8 +72,8 @@ function placeBombs(firstClickX, firstClickY) {
 }
 
 function calculateNumbers() {
-    for (let x = 0; x < width; x++) {
-        for (let y = 0; y < height; y++) {
+    for (let x = 0; x < height; x++) {
+        for (let y = 0; y < width; y++) {
             if (bombMap[x][y] === bomb_label) continue;
 
             let count = 0;
@@ -81,7 +81,7 @@ function calculateNumbers() {
                 for (let dy = -1; dy <= 1; dy++) {
                     let nx = x + dx;
                     let ny = y + dy;
-                    if (nx >= 0 && ny >= 0 && nx < width && ny < height && bombMap[nx][ny] === bomb_label) {
+                    if (nx >= 0 && ny >= 0 && nx < height && ny < width && bombMap[nx][ny] === bomb_label) {
                         count++;
                     }
                 }
@@ -92,8 +92,8 @@ function calculateNumbers() {
 }
 
 function game_lose() {
-    for (let x = 0; x < width; x++) {
-        for (let y = 0; y < height; y++) {
+    for (let x = 0; x < height; x++) {
+        for (let y = 0; y < width; y++) {
             if (bombMap[x][y] == bomb_label) {
                 cellMap[x][y].textContent = '💣';
                 cellMap[x][y].classList.add('game__cell--bomb');
@@ -109,8 +109,8 @@ function game_lose() {
 }
 
 function game_win() {
-    for (let x = 0; x < width; x++) {
-        for (let y = 0; y < height; y++) {
+    for (let x = 0; x < height; x++) {
+        for (let y = 0; y < width; y++) {
             if (bombMap[x][y] == bomb_label) {
                 cellMap[x][y].textContent = '💣';
                 cellMap[x][y].classList.add('game__cell--bomb--win');
@@ -178,7 +178,7 @@ function openCell(x, y, is_recursive_call=false) {
             for (let dy = -1; dy <= 1; dy++) {
                 let nx = x + dx;
                 let ny = y + dy;
-                if (nx >= 0 && ny >= 0 && nx < width && ny < height) {
+                if (nx >= 0 && ny >= 0 && nx < height && ny < width) {
                     openCell(nx, ny, true);
                 }
             }
@@ -197,7 +197,7 @@ function countFlagsAround(x, y) {
         for (let dy = -1; dy <= 1; dy++) {
             let nx = x + dx;
             let ny = y + dy;
-            if (nx >= 0 && ny >= 0 && nx < width && ny < height) {
+            if (nx >= 0 && ny >= 0 && nx < height && ny < width) {
                 if (cellMap[nx][ny].classList.contains('game__cell--flag')) {
                     flagCount++;
                 }
@@ -211,7 +211,7 @@ function toggleFlag(x, y) {
     if (is_game_over) return;
     let cell = cellMap[x][y];
     if (cell.classList.contains('game__cell--open')) return;
-    
+
     if (cell.classList.contains('game__cell--flag')) {
         bombs_cnt.innerHTML = parseInt(bombs_cnt.innerHTML) + 1;
     } else if (bombs_cnt.innerHTML == 0) return; else {
@@ -253,7 +253,7 @@ game.addEventListener('click', (e) => {
 game.addEventListener('contextmenu', (e) => {
     e.preventDefault();
     let cell = e.target;
-    if (!cell.classList.contains('game__cell')) return;
+    if (!cell.classList.contains('game__cell') && !cell.classList.contains('game__cell--mini')) return;
 
     let x = parseInt(cell.dataset.x);
     let y = parseInt(cell.dataset.y);
@@ -280,7 +280,7 @@ function openSurroundingCells(x, y) {
             for (let dy = -1; dy <= 1; dy++) {
                 let nx = x + dx;
                 let ny = y + dy;
-                if (nx >= 0 && ny >= 0 && nx < width && ny < height) {
+                if (nx >= 0 && ny >= 0 && nx < height && ny < width) {
                     if (!cellMap[nx][ny].classList.contains('game__cell--open') &&
                         !cellMap[nx][ny].classList.contains('game__cell--flag')) {
                         openCell(nx, ny);
@@ -313,7 +313,7 @@ document.addEventListener('keydown', (e) => {
             }
             break;
         case 'ArrowDown':
-            if (currentCellX < width - 1) {
+            if (currentCellX < height - 1) {
                 removeSelectedCell();
                 currentCellX++;
                 updateSelectedCell();
@@ -327,7 +327,7 @@ document.addEventListener('keydown', (e) => {
             }
             break;
         case 'ArrowRight':
-            if (currentCellY < height - 1) {
+            if (currentCellY < width - 1) {
                 removeSelectedCell();
                 currentCellY++;
                 updateSelectedCell();
@@ -387,18 +387,18 @@ function closeSettings() {
 }
 
 function applySettings() {
-    width = parseInt(document.getElementById('width').value);
     height = parseInt(document.getElementById('height').value);
+    width = parseInt(document.getElementById('width').value);
     bombs = parseInt(document.getElementById('bombs').value);
-    hollow_cells = width * height - bombs;
+    hollow_cells = height * width - bombs;
 
-    if (width > 50 || height > 50) {
-        alert('Число клеток по вертикали и горизонтали не может превышать 50');
+    if (height > 30 || width > 30) {
+        alert('Число клеток по вертикали и горизонтали не может превышать 30');
         return;
     }
 
     
-    if (bombs >= width * height) {
+    if (bombs >= height * width) {
         alert('Количество мин не может быть больше или равно общему количеству клеток!');
         return;
     }
