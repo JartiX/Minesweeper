@@ -12,14 +12,14 @@
     <div class="game_container">
         <div class="game_label">
             <button class="settings_button" onclick="openSettings()">⚙️</button>
-            <div class="bombs">000</div>
+            <div class="bombs">💣</div>
             <div class="game_result_container">
                 <div class="game_result">Результат игры</div>
             </div>
             <button class="reset_game" onclick="reset_game()">
                 <p class="smile">🙂</p>
             </button>
-            <div class="timer">000</div>
+            <div class="timer">⌛</div>
         </div>
         <div class="game"></div>
     </div>
@@ -28,15 +28,27 @@
         <div class="settings-content">
             <span class="close" onclick="closeSettings()">&times;</span>
             <h2>Настройки игры</h2>
-            <label for="width">Ширина:</label>
-            <input type="number" id="width" value="12" min="6" max="50">
-            <label for="height">Высота:</label>
-            <input type="number" id="height" value="12" min="6" max="50">
-            <label for="bombs">Количество мин:</label>
-            <input type="number" id="bombs" value="20" min="1" max="200">
+            <label for="difficulty">Выберите уровень сложности:</label>
+            <select class="difficulty" onchange="toggleCustomFields()">
+                <option value="easy">Легкий</option>
+                <option value="medium">Средний</option>
+                <option value="hard">Сложный</option>
+                <option value="custom">Кастомный</option>
+            </select>
+
+            <div class="customSettings" style="display:none;">
+                <label for="width">Ширина:</label>
+                <input type="number" class="width" value="12" min="6" max="50">
+                <label for="height">Высота:</label>
+                <input type="number" class="height" value="12" min="6" max="50">
+                <label for="bombs">Количество мин:</label>
+                <input type="number" class="bombs_number" value="20" min="1" max="150">
+            </div>
+
             <button onclick="applySettings()">Применить</button>
         </div>
     </div>
+
 
     <script src="script.js"></script>
 </body>

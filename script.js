@@ -3,19 +3,20 @@ let width = 12;
 let bombs = 20;
 let hollow_cells = height * width - bombs;
 
-
 let bombMap = [];
 let cellMap = [];
 let gameStarted = false;
 let game = document.querySelector('.game');
 let game_result_container = document.querySelector('.game_result_container');
+let reset_game_button = document.querySelector('.reset_game')
 let smile = document.querySelector('.smile');
+let timer = document.querySelector('.timer');
+let bombs_cnt = document.querySelector('.bombs');
+
 let is_game_over = false;
 let bomb_label = -1;
 let opened_cells = 0;
 let founded_bombs = 0;
-let timer = document.querySelector('.timer');
-let bombs_cnt = document.querySelector('.bombs');
 let value_colors = {
     1: 'rgb(0, 89, 253)',
     2: 'rgb(0, 134, 7)',
@@ -32,6 +33,8 @@ let timerInterval;
 
 let currentCellX = 0;
 let currentCellY = 0;
+
+let is_animating = false;
 
 function drawCells() {
     game.style.gridTemplateColumns = (height <= 20 && width <= 20) ? `repeat(${width}, 40px)` : `repeat(${width}, 30px)`
@@ -91,7 +94,16 @@ function calculateNumbers() {
     }
 }
 
+
 function game_lose() {
+    is_animating = true;
+    is_game_over = true;
+    smile.innerHTML = '😵';
+    game_result_container.querySelector('.game_result').style.visibility = 'visible';
+    game_result_container.querySelector('.game_result').style.color = 'red';
+    game_result_container.querySelector('.game_result').innerHTML = 'Вы проиграли!';
+    clearInterval(timerInterval);
+
     const diagonals = [];
 
     for (let d = 0; d < height + width - 1; d++) {
@@ -106,13 +118,17 @@ function game_lose() {
 
     diagonals.forEach((diagonal, i) => {
         setTimeout(() => {
+            if (!is_animating) return;
+
             diagonal.forEach(({ x, y }) => {
                 const cell = cellMap[x][y];
                 const value = bombMap[x][y];
 
-                cell.classList.add('game__cell--flip');
+                cell.classList.add('game__cell--lose__anim');
 
                 setTimeout(() => {
+                    if (!is_animating) return;
+
                     if (value === bomb_label) {
                         cell.textContent = '💣';
                         cell.classList.add('game__cell--bomb');
@@ -136,24 +152,24 @@ function game_lose() {
                             cell.textContent = '';
                         }
                     }
-                }, 300)
+                    
+                    
+                }, 300);
             });
+
         }, i * 200);
     });
 
     setTimeout(() => {
-        is_game_over = true;
-        smile.innerHTML = '😵';
-        clearInterval(timerInterval);
-        game_result_container.querySelector('.game_result').style.visibility = 'visible';
-        game_result_container.querySelector('.game_result').style.color = 'red';
-        game_result_container.querySelector('.game_result').innerHTML = 'Вы проиграли!';
-    }, diagonals.length * 200);
+        is_animating = false;
+    }, (diagonals.length+1) * 200);
 }
 
 
 
+
 function game_win() {
+    clearInterval(timerInterval);
     for (let x = 0; x < height; x++) {
         for (let y = 0; y < width; y++) {
             if (bombMap[x][y] == bomb_label) {
@@ -169,7 +185,6 @@ function game_win() {
 
     is_game_over = true;
     smile.innerHTML = '🥳';
-    clearInterval(timerInterval);
     game_result_container.querySelector('.game_result').style.visibility = 'visible';
     game_result_container.querySelector('.game_result').style.color = 'green';
     game_result_container.querySelector('.game_result').innerHTML = 'Вы выиграли!';
@@ -201,6 +216,8 @@ function resetSelectedCell() {
 }
 
 function reset_game() {
+    is_animating = false;
+
     opened_cells = 0;
     founded_bombs = 0;
     bombMap = [];
@@ -208,21 +225,27 @@ function reset_game() {
     gameStarted = false;
     is_game_over = false;
     timeElapsed = 0;
-    bombs_cnt.innerHTML = bombs;
-    timer.innerHTML = '0';
+    bombs_cnt.innerHTML = `💣 ${bombs}`;
     game.innerHTML = '';
     game_result_container.querySelector('.game_result').style.visibility = 'hidden';
     smile.innerHTML = '🙂';
-    clearInterval(timerInterval)
+    clear_timer();
     drawCells();
-    resetSelectedCell()
+    resetSelectedCell();
+
+    reset_game_button.blur();
 }
 
 function start_timer() {
     timerInterval = setInterval(() => {
         timeElapsed++;
-        timer.innerHTML = timeElapsed;
+        timer.innerHTML = `⌛ ${timeElapsed}`;
     }, 1000);
+}
+
+function clear_timer() {
+    clearInterval(timerInterval);
+    timer.innerHTML = '⌛ 0';
 }
 
 function openCell(x, y, is_recursive_call=false) {
@@ -276,13 +299,14 @@ function countFlagsAround(x, y) {
 
 function toggleFlag(x, y) {
     if (is_game_over) return;
+    
     let cell = cellMap[x][y];
     if (cell.classList.contains('game__cell--open')) return;
 
     if (cell.classList.contains('game__cell--flag')) {
-        bombs_cnt.innerHTML = parseInt(bombs_cnt.innerHTML) + 1;
-    } else if (bombs_cnt.innerHTML == 0) return; else {
-        bombs_cnt.innerHTML = parseInt(bombs_cnt.innerHTML) - 1;
+        bombs_cnt.innerHTML = `💣 ${parseInt(bombs_cnt.innerHTML.split(' ')[1]) + 1}`;
+    } else if (bombs_cnt.innerHTML.split(' ')[1] == 0) return; else {
+        bombs_cnt.innerHTML = `💣 ${parseInt(bombs_cnt.innerHTML.split(' ')[1]) - 1}`;
     }
     cell.classList.toggle('game__cell--flag');
     cell.textContent = cell.classList.contains('game__cell--flag') ? '🚩' : '';
@@ -291,6 +315,8 @@ function toggleFlag(x, y) {
 drawCells();
 
 game.addEventListener('click', (e) => {
+    if (is_animating) return;
+
     let cell = e.target;
     if (!cell.classList.contains('game__cell') && !cell.classList.contains('game__cell--mini')) return;
 
@@ -304,7 +330,7 @@ game.addEventListener('click', (e) => {
 
     if (!gameStarted || is_game_over) {
         placeBombs(x, y);
-        bombs_cnt.innerHTML = bombs;
+        bombs_cnt.innerHTML = `💣 ${bombs}`;
         gameStarted = true;
         is_game_over = false;
         start_timer();
@@ -318,6 +344,8 @@ game.addEventListener('click', (e) => {
 });
 
 game.addEventListener('contextmenu', (e) => {
+    if (is_animating) return;
+
     e.preventDefault();
     let cell = e.target;
     if (!cell.classList.contains('game__cell') && !cell.classList.contains('game__cell--mini')) return;
@@ -365,6 +393,8 @@ function openSurroundingCells(x, y) {
 }
 
 game.addEventListener('dblclick', (e) => {
+    if (is_animating) return;
+
     let cell = e.target;
     if ((!cell.classList.contains('game__cell') && !cell.classList.contains('game__cell--mini')) || !cell.classList.contains('game__cell--open')) return;
 
@@ -377,6 +407,8 @@ game.addEventListener('dblclick', (e) => {
 });
 
 document.addEventListener('keydown', (e) => {
+    if (is_animating) return;
+
     if (e.ctrlKey && (e.key === 'Enter' || e.key === ' ')) {
         toggleFlag(currentCellX, currentCellY);
         return;
@@ -420,7 +452,7 @@ document.addEventListener('keydown', (e) => {
 
             if (!gameStarted || is_game_over) {
                 placeBombs(currentCellX, currentCellY);
-                bombs_cnt.innerHTML = bombs;
+                bombs_cnt.innerHTML = `💣 ${bombs}`;
                 gameStarted = true;
                 is_game_over = false;
                 start_timer();
@@ -452,31 +484,59 @@ smile.addEventListener('mouseup', () => {
 });
 
 function openSettings() {
-    document.getElementById('settingsModal').style.display = "block";
+    document.querySelector('.settings-modal').style.display = "block";
 }
 
 function closeSettings() {
-    document.getElementById('settingsModal').style.display = "none";
+    document.querySelector('.settings-modal').style.display = "none";
+}
+
+function toggleCustomFields() {
+    let difficulty = document.querySelector('.difficulty').value;
+    let customSettings = document.querySelector('.customSettings');
+
+    if (difficulty === 'custom') {
+        customSettings.style.display = 'block';
+    } else {
+        customSettings.style.display = 'none';
+    }
 }
 
 function applySettings() {
-    height = parseInt(document.getElementById('height').value);
-    width = parseInt(document.getElementById('width').value);
-    bombs = parseInt(document.getElementById('bombs').value);
+    let difficulty = document.querySelector('.difficulty').value;
+
+    if (difficulty === 'easy') {
+        height = 8;
+        width = 8;
+        bombs = 10;
+    } else if (difficulty === 'medium') {
+        height = 12;
+        width = 12;
+        bombs = 20;
+    } else if (difficulty === 'hard') {
+        height = 16;
+        width = 16;
+        bombs = 40;
+    } else if (difficulty === 'custom') {
+        height = parseInt(document.querySelector('.height').value);
+        width = parseInt(document.querySelector('.width').value);
+        bombs = parseInt(document.querySelector('.bombs_number').value);
+
+        if (height > 30 || width > 30) {
+            alert('Число клеток по вертикали и горизонтали не может превышать 30');
+            return;
+        }
+
+        if (bombs >= height * width) {
+            alert('Количество мин не может быть больше или равно общему количеству клеток!');
+            return;
+        }
+    }
+
     hollow_cells = height * width - bombs;
 
-    if (height > 30 || width > 30) {
-        alert('Число клеток по вертикали и горизонтали не может превышать 30');
-        return;
-    }
-
-    
-    if (bombs >= height * width) {
-        alert('Количество мин не может быть больше или равно общему количеству клеток!');
-        return;
-    }
-    
-    drawCells();
+    drawCells(); 
     reset_game();
+
     closeSettings();
 }
