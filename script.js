@@ -92,21 +92,66 @@ function calculateNumbers() {
 }
 
 function game_lose() {
+    const diagonals = [];
+
+    for (let d = 0; d < height + width - 1; d++) {
+        diagonals[d] = [];
+    }
+
     for (let x = 0; x < height; x++) {
         for (let y = 0; y < width; y++) {
-            if (bombMap[x][y] == bomb_label) {
-                cellMap[x][y].textContent = '💣';
-                cellMap[x][y].classList.add('game__cell--bomb');
-            }
+            diagonals[x + y].push({ x, y });
         }
     }
-    is_game_over = true;
-    smile.innerHTML = '😵';
-    clearInterval(timerInterval);
-    game_result_container.querySelector('.game_result').style.visibility = 'visible';
-    game_result_container.querySelector('.game_result').style.color = 'red';
-    game_result_container.querySelector('.game_result').innerHTML = 'Вы проиграли!';
+
+    diagonals.forEach((diagonal, i) => {
+        setTimeout(() => {
+            diagonal.forEach(({ x, y }) => {
+                const cell = cellMap[x][y];
+                const value = bombMap[x][y];
+
+                cell.classList.add('game__cell--flip');
+
+                setTimeout(() => {
+                    if (value === bomb_label) {
+                        cell.textContent = '💣';
+                        cell.classList.add('game__cell--bomb');
+
+                        let explosion = document.createElement('div');
+                        explosion.classList.add('explosion');
+                        let rect = cell.getBoundingClientRect();
+
+                        explosion.style.left = `${rect.left + window.scrollX + rect.width / 2 - 25}px`;
+                        explosion.style.top = `${rect.top + window.scrollY + rect.height / 2 - 25}px`;
+
+                        document.body.appendChild(explosion);
+
+                        setTimeout(() => explosion.remove(), 700);
+                    } else {
+                        cell.classList.add('game__cell--lose');
+                        if (value > 0) {
+                            cell.textContent = value;
+                            cell.style.color = value_colors[value];
+                        } else {
+                            cell.textContent = '';
+                        }
+                    }
+                }, 300)
+            });
+        }, i * 200);
+    });
+
+    setTimeout(() => {
+        is_game_over = true;
+        smile.innerHTML = '😵';
+        clearInterval(timerInterval);
+        game_result_container.querySelector('.game_result').style.visibility = 'visible';
+        game_result_container.querySelector('.game_result').style.color = 'red';
+        game_result_container.querySelector('.game_result').innerHTML = 'Вы проиграли!';
+    }, diagonals.length * 200);
 }
+
+
 
 function game_win() {
     for (let x = 0; x < height; x++) {
@@ -119,12 +164,34 @@ function game_win() {
             }
         }
     }
+
+    triggerConfetti();
+
     is_game_over = true;
     smile.innerHTML = '🥳';
     clearInterval(timerInterval);
     game_result_container.querySelector('.game_result').style.visibility = 'visible';
     game_result_container.querySelector('.game_result').style.color = 'green';
     game_result_container.querySelector('.game_result').innerHTML = 'Вы выиграли!';
+}
+
+function triggerConfetti() {
+    let confettiContainer = document.createElement('div');
+    confettiContainer.classList.add('confetti-container');
+    document.body.appendChild(confettiContainer);
+
+    for (let i = 0; i < 100; i++) {
+        let confetti = document.createElement('div');
+        confetti.classList.add('confetti');
+        confetti.style.left = `${Math.random() * window.innerWidth}px`;
+        confetti.style.animationDuration = `${Math.random() * 1 + 1}s`;
+        confetti.style.animationDelay = `${Math.random() * 1}s`;
+        confettiContainer.appendChild(confetti);
+    }
+
+    setTimeout(() => {
+        confettiContainer.remove();
+    }, 2000);
 }
 
 function resetSelectedCell() {
@@ -257,6 +324,12 @@ game.addEventListener('contextmenu', (e) => {
 
     let x = parseInt(cell.dataset.x);
     let y = parseInt(cell.dataset.y);
+
+    removeSelectedCell();
+    currentCellX = x;
+    currentCellY = y;
+    updateSelectedCell();
+
     toggleFlag(x, y);
 });
 
@@ -293,7 +366,7 @@ function openSurroundingCells(x, y) {
 
 game.addEventListener('dblclick', (e) => {
     let cell = e.target;
-    if (!cell.classList.contains('game__cell') && !cell.classList.contains('game__cell--mini')) return;
+    if ((!cell.classList.contains('game__cell') && !cell.classList.contains('game__cell--mini')) || !cell.classList.contains('game__cell--open')) return;
 
     let x = parseInt(cell.dataset.x);
     let y = parseInt(cell.dataset.y);
@@ -304,6 +377,11 @@ game.addEventListener('dblclick', (e) => {
 });
 
 document.addEventListener('keydown', (e) => {
+    if (e.ctrlKey && (e.key === 'Enter' || e.key === ' ')) {
+        toggleFlag(currentCellX, currentCellY);
+        return;
+    }
+
     switch (e.key) {
         case 'ArrowUp':
             if (currentCellX > 0) {
@@ -348,16 +426,11 @@ document.addEventListener('keydown', (e) => {
                 start_timer();
             }
 
-            openCell(currentCellX, currentCellY);
-            break;
-        case 'Control':
-            if (e.key === 'Control') {
-                document.addEventListener('keydown', (e) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                        toggleFlag(currentCellX, currentCellY);
-                    }
-                });
+            if (cellMap[currentCellX][currentCellY].classList.contains('game__cell--open') && bombMap[currentCellX][currentCellY] > 0) {
+                openSurroundingCells(currentCellX, currentCellY);
             }
+
+            openCell(currentCellX, currentCellY);
             break;
     }
 });
