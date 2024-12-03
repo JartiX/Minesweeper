@@ -15,8 +15,23 @@ let bombs_cnt = document.querySelector('.bombs');
 
 let volumeDisplay = document.querySelector('.volumeDisplay')
 let volumeSlider = document.querySelector('.explosionVolume');
+
 let explosionSound = new Audio('sounds/explosion.mp3');
+let winSound = new Audio('sounds/win.mp3');
+let startSound = new Audio('sounds/start.mp3');
+let clickSound = new Audio('sounds/click.mp3');
+let flagTickSound = new Audio('sounds/flag_tick.mp3');
+let flagRemoveSound = new Audio('sounds/flag_remove.mp3');
+let settingsSound = new Audio('sounds/settings.mp3')
+
+let soundsMap = [explosionSound, winSound, startSound, clickSound, flagRemoveSound, flagTickSound, settingsSound]
 explosionSound.volume = 0.04;
+winSound.volume = 0.04;
+startSound.volume = 0.04;
+clickSound.volume = 0.04;
+flagTickSound.volume = 0.04;
+flagRemoveSound.volume = 0.04;
+settingsSound.volume = 0.04;
 
 let toggleSoundButton = document.querySelector('.toggle_sound_button');
 
@@ -44,6 +59,7 @@ let currentCellY = 0;
 let is_animating = false;
 
 function drawCells() {
+    playSound(startSound);
     game.style.gridTemplateColumns = (height <= 20 && width <= 20) ? `repeat(${width}, 40px)` : `repeat(${width}, 30px)`
     let class_name = (height <= 20 && width <= 20) ? "game__cell" : "game__cell--mini";
 
@@ -104,13 +120,16 @@ function calculateNumbers() {
     }
 }
 
-function playSound() {
-    explosionSound.currentTime = 0;
-    explosionSound.play();
+function playSound(sound) {
+    sound.currentTime = 0;
+    sound.play();
 }
 
 function updateVolume(volume) {
-    explosionSound.volume = volume;
+    soundsMap.forEach((sound) => {
+        sound.volume = volume
+    })
+
     volumeDisplay.textContent = `${Math.round(volume * 100)}%`;
 }
 
@@ -156,11 +175,11 @@ function game_lose() {
             if (!is_animating) return;
             
             let bomb_count = 0;
-
+            
             diagonal.forEach(({ x, y }) => {
                 const cell = cellMap[x][y];
                 const value = bombMap[x][y];
-
+                
                 cell.classList.add('game__cell--lose__anim');
 
                 setTimeout(() => {
@@ -178,7 +197,7 @@ function game_lose() {
 
                         cell.classList.add('game__cell--bomb');
                         
-                        playSound();
+                        playSound(explosionSound);
                         
                         let explosion = document.createElement('div');
                         explosion.classList.add('explosion');
@@ -243,6 +262,7 @@ function game_lose() {
 
 function game_win() {
     clearInterval(timerInterval);
+    playSound(winSound);
     for (let x = 0; x < height; x++) {
         for (let y = 0; y < width; y++) {
             if (bombMap[x][y] == bomb_label) {
@@ -338,10 +358,11 @@ function openCell(x, y, is_recursive_call=false) {
         cellMap[x][y].append(bomb_element);
         cell.classList.add('game__cell--bomb');
         cell.style.backgroundColor = 'red';
-        playSound();
+        playSound(explosionSound);
         game_lose();
         return;
     } else if (value > 0) {
+        playSound(clickSound);
         cell.textContent = value;
         cell.style.color = value_colors[value];
     } else {
@@ -386,8 +407,10 @@ function toggleFlag(x, y) {
 
     if (cell.classList.contains('game__cell--flag')) {
         bombs_cnt.querySelector('.mine_counter').innerHTML = parseInt(bombs_cnt.querySelector('.mine_counter').innerHTML) + 1;
+        playSound(flagRemoveSound);
     } else if (bombs_cnt.querySelector('.mine_counter').innerHTML == 0) return; else {
         bombs_cnt.querySelector('.mine_counter').innerHTML = parseInt(bombs_cnt.querySelector('.mine_counter').innerHTML) - 1;
+        playSound(flagTickSound);
     }
     cell.classList.toggle('game__cell--flag');
     cell.textContent = cell.classList.contains('game__cell--flag') ? '🚩' : '';
@@ -555,11 +578,20 @@ smile.addEventListener('mousedown', () => {
     smile.innerHTML = '😲';
 });
 
-smile.addEventListener('mouseup', () => {
+smile.addEventListener('mouseover', () => {
+    smile.innerHTML = '🤨';
+});
+
+smile.addEventListener('mouseout', () => {
+    if (is_game_over) {
+        smile.innerHTML = '😵';
+        return;
+    }
     smile.innerHTML = '🙂';
 });
 
 function openSettings() {
+    playSound(settingsSound);
     document.querySelector('.settings-modal').style.display = "block";
 }
 
@@ -577,9 +609,13 @@ function toggleSoundImage() {
 
 let last_volume;
 function toggleSound() {
+    playSound(clickSound);
     if (toggleSoundButton.value === '1') {
         toggleSoundButton.value = 0;
-        explosionSound.volume = 0;
+
+        soundsMap.forEach((sound) => {
+            sound.volume = 0;
+        })
 
         last_volume = volumeSlider.value;
         volumeSlider.value = 0;
@@ -589,13 +625,17 @@ function toggleSound() {
 
         volumeSlider.value = last_volume;
         updateVolume(last_volume);
-        explosionSound.volume = volumeSlider.value;
+
+        soundsMap.forEach((sound) => {
+            sound.volume = volumeSlider.value;
+        })
     }
     toggleSoundImage();
 
 }
 
 function closeSettings() {
+    playSound(clickSound);
     document.querySelector('.settings-modal').style.display = "none";
 }
 
@@ -611,6 +651,7 @@ function toggleCustomFields() {
 }
 
 function applySettings() {
+    playSound(clickSound);
     let difficulty = document.querySelector('.difficulty').value;
 
     if (difficulty === 'easy') {
