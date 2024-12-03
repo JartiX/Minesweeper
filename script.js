@@ -13,6 +13,13 @@ let smile = document.querySelector('.smile');
 let timer = document.querySelector('.timer');
 let bombs_cnt = document.querySelector('.bombs');
 
+let volumeDisplay = document.querySelector('.volumeDisplay')
+let volumeSlider = document.querySelector('.explosionVolume');
+let explosionSound = new Audio('sounds/explosion.mp3');
+explosionSound.volume = 0.04;
+
+let toggleSoundButton = document.querySelector('.toggle_sound_button');
+
 let is_game_over = false;
 let bomb_label = -1;
 let opened_cells = 0;
@@ -55,6 +62,9 @@ function drawCells() {
         bombMap.push(bombRow);
         cellMap.push(cellRow);
     }
+    const gameResult = document.querySelector('.game_result');
+    const parentWidth = game_result_container.offsetWidth;
+    gameResult.style.fontSize = `${parentWidth / 12}px`;
 }
 
 function placeBombs(firstClickX, firstClickY) {
@@ -94,7 +104,31 @@ function calculateNumbers() {
     }
 }
 
+function playSound() {
+    explosionSound.currentTime = 0;
+    explosionSound.play();
+}
 
+function updateVolume(volume) {
+    explosionSound.volume = volume;
+    volumeDisplay.textContent = `${Math.round(volume * 100)}%`;
+}
+
+volumeSlider.addEventListener('input', () => {
+    last_volume = volumeSlider.value;
+    if (volumeSlider.value != 0) {
+        toggleSoundButton.value = 1;
+        toggleSoundImage();
+    }
+    let volume = volumeSlider.value;
+    updateVolume(volume);
+});
+
+function createMineImage() {
+    let bomb_element = new Image();
+    bomb_element.src = 'images/мина.png';
+    return bomb_element;
+}
 function game_lose() {
     is_animating = true;
     is_game_over = true;
@@ -104,8 +138,9 @@ function game_lose() {
     game_result_container.querySelector('.game_result').innerHTML = 'Вы проиграли!';
     clearInterval(timerInterval);
 
+    
     const diagonals = [];
-
+    
     for (let d = 0; d < height + width - 1; d++) {
         diagonals[d] = [];
     }
@@ -119,6 +154,8 @@ function game_lose() {
     diagonals.forEach((diagonal, i) => {
         setTimeout(() => {
             if (!is_animating) return;
+            
+            let bomb_count = 0;
 
             diagonal.forEach(({ x, y }) => {
                 const cell = cellMap[x][y];
@@ -130,33 +167,69 @@ function game_lose() {
                     if (!is_animating) return;
 
                     if (value === bomb_label) {
-                        cell.textContent = '💣';
-                        cell.classList.add('game__cell--bomb');
+                        bomb_count++;
+                        if (cell.classList.contains('game__cell--flag')) {
+                            cell.textContent = ''
+                        }
+                        if (!cell.classList.contains('game__cell--bomb')) {
+                            let bomb_element = createMineImage();
+                            cell.append(bomb_element);
+                        }
 
+                        cell.classList.add('game__cell--bomb');
+                        
+                        playSound();
+                        
                         let explosion = document.createElement('div');
                         explosion.classList.add('explosion');
                         let rect = cell.getBoundingClientRect();
-
+                        
                         explosion.style.left = `${rect.left + window.scrollX + rect.width / 2 - 25}px`;
                         explosion.style.top = `${rect.top + window.scrollY + rect.height / 2 - 25}px`;
-
+                        
                         document.body.appendChild(explosion);
-
+                        
                         setTimeout(() => explosion.remove(), 700);
                     } else {
                         cell.classList.add('game__cell--lose');
-                        if (value > 0) {
+                        if (cell.classList.contains('game__cell--flag')) {
+                            cell.textContent = '';
+                            let container = document.createElement('div');
+
+                            container.classList.add('mine-container');
+
+                            let bomb_element = createMineImage();
+                            container.append(bomb_element);
+
+                            let cross = document.createElement('span');
+                            cross.textContent = '❌';
+                            container.append(cross);
+
+                            cell.append(container);
+                        }
+                        else if (value > 0) {
                             cell.textContent = value;
                             cell.style.color = value_colors[value];
                         } else {
                             cell.textContent = '';
                         }
                     }
-                    
-                    
                 }, 300);
             });
-
+            
+            
+            setTimeout(() => {
+                if (bomb_count > 0) {
+                    const duration = Math.min(1.5 / bomb_count, 1.5);
+    
+                    game.classList.add('screen-shake');
+                    game.style.setProperty('--explosion_duration', `${duration}s`)
+    
+                    setTimeout(() => {
+                        game.classList.remove('screen-shake');
+                    }, duration * 1000);
+                }
+            }, diagonal.length * 120)
         }, i * 200);
     });
 
@@ -173,7 +246,9 @@ function game_win() {
     for (let x = 0; x < height; x++) {
         for (let y = 0; y < width; y++) {
             if (bombMap[x][y] == bomb_label) {
-                cellMap[x][y].textContent = '💣';
+                bomb_element = createMineImage();
+
+                cellMap[x][y].append(bomb_element);
                 cellMap[x][y].classList.add('game__cell--bomb--win');
             } else {
                 cellMap[x][y].classList.add('game__cell--win');
@@ -225,7 +300,9 @@ function reset_game() {
     gameStarted = false;
     is_game_over = false;
     timeElapsed = 0;
-    bombs_cnt.innerHTML = `💣 ${bombs}`;
+
+    bombs_cnt.querySelector('.mine_counter').innerHTML = bombs;
+
     game.innerHTML = '';
     game_result_container.querySelector('.game_result').style.visibility = 'hidden';
     smile.innerHTML = '🙂';
@@ -239,13 +316,13 @@ function reset_game() {
 function start_timer() {
     timerInterval = setInterval(() => {
         timeElapsed++;
-        timer.innerHTML = `⌛ ${timeElapsed}`;
+        timer.querySelector('.time_counter').innerHTML = timeElapsed;
     }, 1000);
 }
 
 function clear_timer() {
     clearInterval(timerInterval);
-    timer.innerHTML = '⌛ 0';
+    timer.querySelector('.time_counter').innerHTML = timeElapsed;
 }
 
 function openCell(x, y, is_recursive_call=false) {
@@ -256,8 +333,12 @@ function openCell(x, y, is_recursive_call=false) {
     let value = bombMap[x][y];
 
     if (value === bomb_label && !is_recursive_call) {
-        cell.textContent = '💣';
+        bomb_element = createMineImage();
+
+        cellMap[x][y].append(bomb_element);
         cell.classList.add('game__cell--bomb');
+        cell.style.backgroundColor = 'red';
+        playSound();
         game_lose();
         return;
     } else if (value > 0) {
@@ -304,9 +385,9 @@ function toggleFlag(x, y) {
     if (cell.classList.contains('game__cell--open')) return;
 
     if (cell.classList.contains('game__cell--flag')) {
-        bombs_cnt.innerHTML = `💣 ${parseInt(bombs_cnt.innerHTML.split(' ')[1]) + 1}`;
-    } else if (bombs_cnt.innerHTML.split(' ')[1] == 0) return; else {
-        bombs_cnt.innerHTML = `💣 ${parseInt(bombs_cnt.innerHTML.split(' ')[1]) - 1}`;
+        bombs_cnt.querySelector('.mine_counter').innerHTML = parseInt(bombs_cnt.querySelector('.mine_counter').innerHTML) + 1;
+    } else if (bombs_cnt.querySelector('.mine_counter').innerHTML == 0) return; else {
+        bombs_cnt.querySelector('.mine_counter').innerHTML = parseInt(bombs_cnt.querySelector('.mine_counter').innerHTML) - 1;
     }
     cell.classList.toggle('game__cell--flag');
     cell.textContent = cell.classList.contains('game__cell--flag') ? '🚩' : '';
@@ -330,7 +411,7 @@ game.addEventListener('click', (e) => {
 
     if (!gameStarted || is_game_over) {
         placeBombs(x, y);
-        bombs_cnt.innerHTML = `💣 ${bombs}`;
+        bombs_cnt.querySelector('.mine_counter').innerHTML = bombs;
         gameStarted = true;
         is_game_over = false;
         start_timer();
@@ -340,7 +421,8 @@ game.addEventListener('click', (e) => {
     currentCellY = y;
     updateSelectedCell();
 
-    openCell(x, y);
+    if (!cell.classList.contains('game__cell--open')) openCell(x, y);
+    else if (bombMap[x][y] > 0) openSurroundingCells(x, y);
 });
 
 game.addEventListener('contextmenu', (e) => {
@@ -392,20 +474,6 @@ function openSurroundingCells(x, y) {
     }
 }
 
-game.addEventListener('dblclick', (e) => {
-    if (is_animating) return;
-
-    let cell = e.target;
-    if ((!cell.classList.contains('game__cell') && !cell.classList.contains('game__cell--mini')) || !cell.classList.contains('game__cell--open')) return;
-
-    let x = parseInt(cell.dataset.x);
-    let y = parseInt(cell.dataset.y);
-
-    if (bombMap[x][y] > 0) {
-        openSurroundingCells(x, y);
-    }
-});
-
 document.addEventListener('keydown', (e) => {
     if (is_animating) return;
 
@@ -452,7 +520,7 @@ document.addEventListener('keydown', (e) => {
 
             if (!gameStarted || is_game_over) {
                 placeBombs(currentCellX, currentCellY);
-                bombs_cnt.innerHTML = `💣 ${bombs}`;
+                bombs_cnt.querySelector('.mine_counter').innerHTML = bombs
                 gameStarted = true;
                 is_game_over = false;
                 start_timer();
@@ -468,10 +536,18 @@ document.addEventListener('keydown', (e) => {
 });
 
 game.addEventListener('mousedown', () => {
+    if (is_game_over) {
+        smile.innerHTML = '😖';
+        return;
+    }
     smile.innerHTML = '😲';
 });
 
 game.addEventListener('mouseup', () => {
+    if (is_game_over) {
+        smile.innerHTML = '😵';
+        return;
+    }
     smile.innerHTML = '🙂';
 });
 
@@ -485,6 +561,38 @@ smile.addEventListener('mouseup', () => {
 
 function openSettings() {
     document.querySelector('.settings-modal').style.display = "block";
+}
+
+function toggleSoundImage() {
+    var newImage = new Image();
+
+    if (toggleSoundButton.value !== '1') {
+        newImage.src = "images/mute_sound.png";
+    } else {
+        newImage.src = "images/sound.png";
+    }
+    toggleSoundButton.innerHTML = '';
+    toggleSoundButton.appendChild(newImage);
+}
+
+let last_volume;
+function toggleSound() {
+    if (toggleSoundButton.value === '1') {
+        toggleSoundButton.value = 0;
+        explosionSound.volume = 0;
+
+        last_volume = volumeSlider.value;
+        volumeSlider.value = 0;
+        updateVolume(0);
+    } else {
+        toggleSoundButton.value = 1;
+
+        volumeSlider.value = last_volume;
+        updateVolume(last_volume);
+        explosionSound.volume = volumeSlider.value;
+    }
+    toggleSoundImage();
+
 }
 
 function closeSettings() {
@@ -522,6 +630,10 @@ function applySettings() {
         width = parseInt(document.querySelector('.width').value);
         bombs = parseInt(document.querySelector('.bombs_number').value);
 
+        if (height < 8 || width < 8) {
+            alert('Число клеток по вертикали и горизонтали не может быть меньше 8')
+            return;
+        }
         if (height > 30 || width > 30) {
             alert('Число клеток по вертикали и горизонтали не может превышать 30');
             return;

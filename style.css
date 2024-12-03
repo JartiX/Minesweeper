@@ -14,7 +14,7 @@ body {
     flex-direction: column;
     align-items: center;
     background-color: #2c2f38;
-    padding: 80px 50px 50px 50px;
+    padding: 80px 15px 15px 15px;
     border-radius: 12px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
 }
@@ -30,6 +30,9 @@ body {
 
 .bombs,
 .timer {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
     width: 33%;
     max-width: 150px;
     height: 40px;
@@ -40,6 +43,18 @@ body {
     padding: 6px;
     color: #fff;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.bombs p,
+.timer .time_counter {
+    margin: 0;
+    transform: translateY(3px);
+}
+
+.sand_clock {
+    margin: 0;
+    transform: translateY(-3px);
+
 }
 
 .game_result_container {
@@ -55,8 +70,9 @@ body {
     text-align: center;
 }
 
+
 .game_result {
-    font-size: 48px;
+    font-size: 3em;
     visibility: hidden;
     color: #ffcc00;
     font-weight: bold;
@@ -142,8 +158,12 @@ body {
 }
 
 .game__cell--bomb {
-    background-color: #222;
+    background-color: #af0000;
     color: yellow;
+}
+
+img {
+    height: 100%;
 }
 
 .game__cell--bomb--win {
@@ -239,14 +259,24 @@ body {
     z-index: 10000;
 }
 
-.settings_button {
+.settings_button,
+.toggle_sound_button {
     position: absolute;
-    top: -70px;
-    right: -40px;
+    z-index: 4;
     font-size: 24px;
     background-color: rgba(116, 204, 255, 0.8);
     cursor: pointer;
     border-radius: 8px;
+    width: 60px;
+    height: 60px;
+    top: -70px;
+}
+
+.toggle_sound_button {
+    right: 0;
+}
+.toggle_sound_button img {
+    translate: -4px;
 }
 
 .settings-modal {
@@ -345,4 +375,49 @@ body {
     pointer-events: none;
     animation: explosion 0.7s ease-out;
     z-index: 999;
+}
+
+@keyframes shake {
+  0% { transform: translate(1px, 1px) rotate(0deg); }
+  10% { transform: translate(-1px, -2px) rotate(-1deg); }
+  20% { transform: translate(-3px, 0px) rotate(1deg); }
+  30% { transform: translate(3px, 2px) rotate(0deg); }
+  40% { transform: translate(1px, -1px) rotate(1deg); }
+  50% { transform: translate(-1px, 2px) rotate(-1deg); }
+  60% { transform: translate(-3px, 1px) rotate(0deg); }
+  70% { transform: translate(3px, 1px) rotate(-1deg); }
+  80% { transform: translate(-1px, -1px) rotate(1deg); }
+  90% { transform: translate(1px, 2px) rotate(0deg); }
+  100% { transform: translate(1px, -2px) rotate(-1deg); }
+}
+
+.screen-shake {
+  animation: shake var(--explosion_duration, 0.8s);
+  animation-iteration-count: infinite;
+}
+
+.mine_image {
+    height: 100%;
+}
+
+.explosionVolume {
+    width: 100%;
+    margin: 10px 0;
+}
+.volumeDisplayP {
+    margin-top: 0;
+}
+
+.mine-container {
+    position: relative;
+    display: inline-block;
+}
+
+.mine-container span {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 30px;
+    color: red;
 }

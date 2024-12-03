@@ -12,14 +12,21 @@
     <div class="game_container">
         <div class="game_label">
             <button class="settings_button" onclick="openSettings()">⚙️</button>
-            <div class="bombs">💣</div>
+            <button class="toggle_sound_button" onclick="toggleSound()" value="1"><img src="images/sound.png"></img></button>
+            <div class="bombs">
+                <img class="mine_image" src="images/мина.png"></img>
+                <p class="mine_counter"></p>
+            </div>
             <div class="game_result_container">
                 <div class="game_result">Результат игры</div>
             </div>
             <button class="reset_game" onclick="reset_game()">
                 <p class="smile">🙂</p>
             </button>
-            <div class="timer">⌛</div>
+            <div class="timer">
+                <p class="sand_clock">⌛</p>
+                <p class="time_counter"></p>
+            </div>
         </div>
         <div class="game"></div>
     </div>
@@ -38,12 +45,16 @@
 
             <div class="customSettings" style="display:none;">
                 <label for="width">Ширина:</label>
-                <input type="number" class="width" value="12" min="6" max="50">
+                <input type="number" class="width" value="12" min="8" max="50">
                 <label for="height">Высота:</label>
-                <input type="number" class="height" value="12" min="6" max="50">
+                <input type="number" class="height" value="12" min="8" max="50">
                 <label for="bombs">Количество мин:</label>
                 <input type="number" class="bombs_number" value="20" min="1" max="150">
             </div>
+
+            <label for="explosionVolume">Громкость взрывов:</label>
+            <input type="range" class="explosionVolume" min="0" max="1" step="0.01" value="0.04">
+            <p class="volumeDisplayP">Громкость: <span class="volumeDisplay">4%</span></p>
 
             <button onclick="applySettings()">Применить</button>
         </div>
