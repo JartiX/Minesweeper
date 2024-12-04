@@ -65,9 +65,10 @@ function drawCells() {
     playSound(startSound);
     const scale = window.devicePixelRatio;
     let width1 = 60/scale;
-    let width2 = 38/scale;
+    let width2 = 30/scale;
     game.style.gridTemplateColumns = (height < 20 && width < 20) ? `repeat(${width}, ${width1}px)` : `repeat(${width}, ${width2}px)`
     let class_name = (height < 20 && width < 20) ? "game__cell" : "game__cell--mini";
+
 
     for (let x = 0; x < height; x++) {
         let bombRow = [];
@@ -75,6 +76,17 @@ function drawCells() {
         for (let y = 0; y < width; y++) {
             let cell = document.createElement('div');
             cell.classList.add(class_name);
+
+            if (class_name === 'game__cell--mini') {
+                cell.style.width = `${width2}px`;
+                cell.style.height = `${width2}px`;
+                cell.style.fontSize = `${1.2}rem`;
+            } else {
+                cell.style.width = `${width1}px`
+                cell.style.height = `${width1}px`
+                cell.style.fontSize = `${1.5}rem`;
+            }
+
             cell.dataset.x = x;
             cell.dataset.y = y;
             game.append(cell);
@@ -722,11 +734,15 @@ function applySettings() {
         let height_ = parseInt(document.querySelector('.height').value);
         let width_ = parseInt(document.querySelector('.width').value);
         let bombs_ = parseInt(document.querySelector('.bombs_number').value);
-        console.log(height, width, bombs)
+
         if (isNaN(height_) || isNaN(width_) || isNaN(bombs_)) {
             make_error('Некорректные введенные значения');
             return;
         }
+
+        width = width_;
+        height = height_;
+        bombs = bombs_;
 
         if (height < 8 || width < 8) {
             make_error('Число клеток по вертикали и горизонтали не может быть меньше 8')

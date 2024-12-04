@@ -120,23 +120,18 @@ body {
 .game__cell--mini {
     position: relative;
     font-weight: bold;
-    width: 40px;
-    height: 40px;
     background-color: #999;
     display: flex;
     justify-content: center;
     align-items: center;
-    font-size: 26px;
+    font-size: 1.5rem;
     cursor: pointer;
     border: 1px solid #444;
     border-radius: 6px;
     user-select: none;
     transition: background-color 0.2s, transform 0.2s;
 }
-.game__cell--mini {
-    width: 25px;
-    height: 25px;
-}
+
 .game__cell:hover,
 .game__cell--mini:hover {
     transform: scale(1.05);
