@@ -15,6 +15,7 @@ let bombs_cnt = document.querySelector('.bombs');
 
 let volumeDisplay = document.querySelector('.volumeDisplay')
 let volumeSlider = document.querySelector('.explosionVolume');
+let sound_icon = document.querySelector('.soundIcon');
 
 let explosionSound = new Audio('sounds/explosion.mp3');
 let winSound = new Audio('sounds/win.mp3');
@@ -59,7 +60,7 @@ let currentCellY = 0;
 let is_animating = false;
 
 let error_field = document.querySelector('.error_field')
-
+    
 function drawCells() {
     playSound(startSound);
     game.style.gridTemplateColumns = (height < 20 && width < 20) ? `repeat(${width}, 40px)` : `repeat(${width}, 25px)`
@@ -138,17 +139,55 @@ function updateVolume(volume) {
 volumeSlider.addEventListener('input', () => {
     last_volume = volumeSlider.value;
     if (volumeSlider.value != 0) {
+        sound_icon.src = "images/sound.png";
         toggleSoundButton.value = 1;
         toggleSoundImage();
+    } else {
+        sound_icon.src = 'images/mute_sound.png'
     }
     let volume = volumeSlider.value;
     updateVolume(volume);
 });
 
-function createMineImage() {
-    let bomb_element = new Image();
-    bomb_element.src = 'images/мина.png';
-    return bomb_element;
+function createImage(src) {
+    let element = new Image();
+    element.src = src;
+    return element;
+}
+
+function visualizeBomb(cell) {
+    let bomb_element = createImage('images/мина.png');
+    bomb_element.classList.add('bomb-image');
+    cell.append(bomb_element);
+
+    let explosion_gif = new Image();
+    explosion_gif.src = "images/explosion.gif";
+    explosion_gif.classList.add('explosion_gif');
+    cell.append(explosion_gif)
+    setTimeout(() => {
+        explosion_gif.remove();
+    }, 390);
+
+    let crash_number = Math.floor(Math.random() * 3) + 1;
+    let earth_crashed = createImage(`images/crashed_earth${crash_number}.png`);
+    earth_crashed.classList.add("crashed_earth");
+
+    let darkening = document.createElement('div');
+    darkening.classList.add('darkening-effect');
+
+    cell.append(darkening);
+    cell.append(earth_crashed)
+
+    let explosion = document.createElement('div');
+    explosion.classList.add('explosion');
+    let rect = cell.getBoundingClientRect();
+
+    explosion.style.left = `${rect.left + window.scrollX + rect.width / 2 - 25}px`;
+    explosion.style.top = `${rect.top + window.scrollY + rect.height / 2 - 25}px`;
+
+    document.body.appendChild(explosion);
+
+    setTimeout(() => explosion.remove(), 700);
 }
 function game_lose() {
     is_animating = true;
@@ -193,24 +232,13 @@ function game_lose() {
                             cell.textContent = ''
                         }
                         if (!cell.classList.contains('game__cell--bomb')) {
-                            let bomb_element = createMineImage();
-                            cell.append(bomb_element);
+                            visualizeBomb(cell)
                         }
 
                         cell.classList.add('game__cell--bomb');
                         
                         playSound(explosionSound);
                         
-                        let explosion = document.createElement('div');
-                        explosion.classList.add('explosion');
-                        let rect = cell.getBoundingClientRect();
-                        
-                        explosion.style.left = `${rect.left + window.scrollX + rect.width / 2 - 25}px`;
-                        explosion.style.top = `${rect.top + window.scrollY + rect.height / 2 - 25}px`;
-                        
-                        document.body.appendChild(explosion);
-                        
-                        setTimeout(() => explosion.remove(), 700);
                     } else {
                         cell.classList.add('game__cell--lose');
                         if (cell.classList.contains('game__cell--flag')) {
@@ -219,7 +247,8 @@ function game_lose() {
 
                             container.classList.add('mine-container');
 
-                            let bomb_element = createMineImage();
+                            let bomb_element = createImage('images/мина.png');
+                            bomb_element.classList.add('bomb-image');
                             container.append(bomb_element);
 
                             let cross = document.createElement('span');
@@ -269,7 +298,8 @@ function game_win() {
         for (let y = 0; y < width; y++) {
             if (bombMap[x][y] == bomb_label) {
                 if (cellMap[x][y].classList.contains('game__cell--flag')) cellMap[x][y].textContent = '';
-                bomb_element = createMineImage();
+                bomb_element = createImage('images/мина.png');
+                bomb_element.classList.add('bomb-image');
 
                 cellMap[x][y].append(bomb_element);
                 cellMap[x][y].classList.add('game__cell--bomb--win');
@@ -356,14 +386,13 @@ function openCell(x, y, is_recursive_call=false) {
     let value = bombMap[x][y];
 
     if (value === bomb_label && !is_recursive_call) {
-        bomb_element = createMineImage();
-
-        cellMap[x][y].append(bomb_element);
+        visualizeBomb(cell)
         cell.classList.add('game__cell--bomb');
         cell.style.backgroundColor = 'red';
         playSound(explosionSound);
         game_lose();
         return;
+
     } else if (value > 0) {
         playSound(clickSound);
         cell.textContent = value;
@@ -603,13 +632,14 @@ function openSettings() {
 }
 
 function toggleSoundImage() {
-    var newImage = new Image();
+    var src;
 
     if (toggleSoundButton.value !== '1') {
-        newImage.src = "images/mute_sound.png";
+        src = "images/mute_sound.png";
     } else {
-        newImage.src = "images/sound.png";
+        src = "images/sound.png";
     }
+    newImage = createImage(src);
     toggleSoundButton.innerHTML = '';
     toggleSoundButton.appendChild(newImage);
 }
@@ -626,16 +656,18 @@ function toggleSound() {
 
         last_volume = volumeSlider.value;
         volumeSlider.value = 0;
+        sound_icon.src = "images/mute_sound.png";
         updateVolume(0);
     } else {
         toggleSoundButton.value = 1;
-
+        
         volumeSlider.value = last_volume;
         updateVolume(last_volume);
-
+        
         soundsMap.forEach((sound) => {
             sound.volume = volumeSlider.value;
         })
+        sound_icon.src = "images/sound.png";
     }
     toggleSoundImage();
 

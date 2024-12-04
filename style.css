@@ -10,6 +10,7 @@ body {
 }
 
 .game_container {
+    user-select: none;
     display: flex;
     position: relative;
     flex-direction: column;
@@ -44,6 +45,7 @@ body {
     padding: 6px;
     color: #fff;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    cursor: default;
 }
 
 .bombs p,
@@ -116,6 +118,7 @@ body {
 
 .game__cell,
 .game__cell--mini {
+    position: relative;
     font-weight: bold;
     width: 40px;
     height: 40px;
@@ -310,6 +313,7 @@ img {
     max-height: 90%;
     border-radius: 12px;
     overflow-y: auto;
+    max-height: 85%;
 }
 
 .settings-content .close {
@@ -460,4 +464,57 @@ img {
     100% {
         opacity: 0;
     }
+}
+
+.crashed_earth {
+    position: absolute;
+    overflow: hidden;
+    height: 150%;
+    z-index: 1;
+}
+
+.bomb-image {
+    z-index: 2;
+}
+
+.darkening-effect {
+    position: absolute;
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    background: radial-gradient(circle at center, rgba(37, 37, 37, 0.3) 40%, rgba(60, 60, 60, 0.01) 70%);
+    filter: blur(10px);
+    pointer-events: none;
+    z-index: 3;
+    transform: scale(1) rotate(0deg);
+    animation: wobble 1.5s infinite alternate ease-in-out;
+}
+
+@keyframes wobble {
+    0% {
+        transform: scale(1) rotate(0deg);
+    }
+
+    50% {
+        transform: scale(1.05) rotate(7deg);
+    }
+
+    100% {
+        transform: scale(1) rotate(-7deg);
+    }
+}
+
+.explosion_gif {
+    position: absolute;
+    height: 200%;
+    z-index: 5;
+}
+
+.inputVolumeContainer {
+    display: flex;
+    flex-direction: row;
+}
+
+.soundIcon {
+    width: 60px;
 }
