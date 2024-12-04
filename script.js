@@ -470,13 +470,14 @@ drawCells();
 game.addEventListener('click', (e) => {
     if (is_animating) return;
 
-    let cell = e.target;
-    if (!cell.classList.contains('game__cell') && !cell.classList.contains('game__cell--mini')) return;
-
     if (is_game_over) {
         reset_game();
         return;
     }
+    
+    let cell = e.target;
+    if (!cell.classList.contains('game__cell') && !cell.classList.contains('game__cell--mini')) return;
+
 
     let x = parseInt(cell.dataset.x);
     let y = parseInt(cell.dataset.y);
