@@ -63,13 +63,25 @@ let error_field = document.querySelector('.error_field');
 
 let in_settings_menu = false;
     
+
+function calculateCellWidth(cells, baseWidth20 = 60, baseWidth30 = 40) {
+    if (cells <= 20) {
+        return baseWidth20;
+    } else if (cells <= 30) {
+        return 30 + (baseWidth30 - baseWidth20) / (30 - 20) * (cells - 30);
+    } else {
+        return baseWidth30;
+    }
+}
+
 function drawCells() {
     playSound(startSound);
     const scale = window.devicePixelRatio;
-    let width1 = 60/scale;
-    let width2 = 30/scale;
-    game.style.gridTemplateColumns = (height < 20 && width < 20) ? `repeat(${width}, ${width1}px)` : `repeat(${width}, ${width2}px)`
-    let class_name = (height < 20 && width < 20) ? "game__cell" : "game__cell--mini";
+    let cell_width = calculateCellWidth(Math.max(width, height))/scale;
+    
+    let check_number = 20;
+    game.style.gridTemplateColumns = `repeat(${width}, ${cell_width}px)`;
+    let class_name = (height < check_number && width < check_number) ? "game__cell" : "game__cell--mini";
 
 
     for (let x = 0; x < height; x++) {
@@ -79,13 +91,12 @@ function drawCells() {
             let cell = document.createElement('div');
             cell.classList.add(class_name);
 
+            cell.style.width = `${cell_width}px`;
+            cell.style.height = `${cell_width}px`;
+
             if (class_name === 'game__cell--mini') {
-                cell.style.width = `${width2}px`;
-                cell.style.height = `${width2}px`;
                 cell.style.fontSize = `${1.2}rem`;
             } else {
-                cell.style.width = `${width1}px`
-                cell.style.height = `${width1}px`
                 cell.style.fontSize = `${1.5}rem`;
             }
 
@@ -758,7 +769,12 @@ function applySettings() {
             return;
         }
 
-        if (bombs >= (height * width) * 0.9) {
+        if (bombs < 1) {
+            make_error('Мин не может быть меньше чем 1!');
+            return;
+        }
+
+        if (bombs >= (height * width) * 0.8) {
             make_error('Количество мин не может быть таким большим!')
             return;
         }
