@@ -58,6 +58,8 @@ let currentCellY = 0;
 
 let is_animating = false;
 
+let error_field = document.querySelector('.error_field')
+
 function drawCells() {
     playSound(startSound);
     game.style.gridTemplateColumns = (height < 20 && width < 20) ? `repeat(${width}, 40px)` : `repeat(${width}, 25px)`
@@ -266,6 +268,7 @@ function game_win() {
     for (let x = 0; x < height; x++) {
         for (let y = 0; y < width; y++) {
             if (bombMap[x][y] == bomb_label) {
+                if (cellMap[x][y].classList.contains('game__cell--flag')) cellMap[x][y].textContent = '';
                 bomb_element = createMineImage();
 
                 cellMap[x][y].append(bomb_element);
@@ -559,10 +562,6 @@ document.addEventListener('keydown', (e) => {
 });
 
 game.addEventListener('mousedown', () => {
-    if (is_game_over) {
-        smile.innerHTML = '😖';
-        return;
-    }
     smile.innerHTML = '😲';
 });
 
@@ -578,16 +577,15 @@ smile.addEventListener('mousedown', () => {
     smile.innerHTML = '😲';
 });
 
+let last_smile = "";
+
 smile.addEventListener('mouseover', () => {
+    last_smile = smile.innerHTML;
     smile.innerHTML = '🤨';
 });
 
 smile.addEventListener('mouseout', () => {
-    if (is_game_over) {
-        smile.innerHTML = '😵';
-        return;
-    }
-    smile.innerHTML = '🙂';
+    smile.innerHTML = is_game_over ? last_smile : "🙂";
 });
 
 function openSettings() {
@@ -659,6 +657,14 @@ function toggleCustomFields() {
     }
 }
 
+function make_error(error) {
+    error_field.innerHTML = error;
+    error_field.style.display = 'block';
+
+    setTimeout(() => {
+        error_field.style.display = 'none';
+    }, 5000);
+}
 function applySettings() {
     playSound(clickSound);
     let difficulty = document.querySelector('.difficulty').value;
@@ -681,16 +687,16 @@ function applySettings() {
         bombs = parseInt(document.querySelector('.bombs_number').value);
 
         if (height < 8 || width < 8) {
-            alert('Число клеток по вертикали и горизонтали не может быть меньше 8')
+            make_error('Число клеток по вертикали и горизонтали не может быть меньше 8')
             return;
         }
         if (height > 30 || width > 30) {
-            alert('Число клеток по вертикали и горизонтали не может превышать 30');
+            make_error('Число клеток по вертикали и горизонтали не может превышать 30');
             return;
         }
 
-        if (bombs >= height * width) {
-            alert('Количество мин не может быть больше или равно общему количеству клеток!');
+        if (bombs >= (height * width) * 0.95) {
+            make_error('Количество мин не может быть таким большим!')
             return;
         }
     }

@@ -10,6 +10,7 @@
 
 <body>
     <div class="game_container">
+        <span class="error_field"></span>
         <div class="game_label">
             <button class="settings_button" onclick="openSettings()">⚙️</button>
             <button class="toggle_sound_button" onclick="toggleSound()" value="1"><img src="images/sound.png"></img></button>
@@ -28,8 +29,6 @@
                 <p class="time_counter"></p>
             </div>
         </div>
-        <div class="game"></div>
-        
         <div id="settingsModal" class="settings-modal">
             <div class="settings-content">
                 <span class="close" onclick="closeSettings()">&times;</span>
@@ -58,6 +57,8 @@
                 <button onclick="applySettings()">Применить</button>
             </div>
         </div>
+        <div class="game"></div>
+        
     </div>
 
 
