@@ -63,7 +63,10 @@ let error_field = document.querySelector('.error_field')
     
 function drawCells() {
     playSound(startSound);
-    game.style.gridTemplateColumns = (height < 20 && width < 20) ? `repeat(${width}, 40px)` : `repeat(${width}, 25px)`
+    const scale = window.devicePixelRatio;
+    let width1 = 60/scale;
+    let width2 = 38/scale;
+    game.style.gridTemplateColumns = (height < 20 && width < 20) ? `repeat(${width}, ${width1}px)` : `repeat(${width}, ${width2}px)`
     let class_name = (height < 20 && width < 20) ? "game__cell" : "game__cell--mini";
 
     for (let x = 0; x < height; x++) {
@@ -143,6 +146,8 @@ volumeSlider.addEventListener('input', () => {
         toggleSoundButton.value = 1;
         toggleSoundImage();
     } else {
+        toggleSoundButton.value = '0';
+        toggleSoundImage();
         sound_icon.src = 'images/mute_sound.png'
     }
     let volume = volumeSlider.value;
@@ -727,7 +732,7 @@ function applySettings() {
             return;
         }
 
-        if (bombs >= (height * width) * 0.95) {
+        if (bombs >= (height * width) * 0.9) {
             make_error('Количество мин не может быть таким большим!')
             return;
         }
