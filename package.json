@@ -4,7 +4,7 @@
   "description": "Minesweeper game",
   "main": "main.js",
   "scripts": {
-    "start": "cross-env NODE_ENV=production electron .",
+    "start": "electron .",
     "test": "echo \"Error: no test specified\" && exit 1",
     "package": "electron-forge package",
     "make": "electron-forge make"
@@ -21,7 +21,8 @@
     "@electron-forge/plugin-fuses": "^7.6.0",
     "@electron/fuses": "^1.8.0",
     "cross-env": "^7.0.3",
-    "electron": "^33.2.1"
+    "electron": "^33.2.1",
+    "electron-builder": "^25.1.8"
   },
   "dependencies": {
     "electron-squirrel-startup": "^1.0.1"

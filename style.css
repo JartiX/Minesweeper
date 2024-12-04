@@ -315,6 +315,9 @@ img {
     overflow-y: auto;
     max-height: 85%;
 }
+.settings-content h2 {
+    margin: 0;
+}
 
 .settings-content .close {
     align-self: flex-end;
