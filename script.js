@@ -719,9 +719,14 @@ function applySettings() {
         width = 16;
         bombs = 40;
     } else if (difficulty === 'custom') {
-        height = parseInt(document.querySelector('.height').value);
-        width = parseInt(document.querySelector('.width').value);
-        bombs = parseInt(document.querySelector('.bombs_number').value);
+        let height_ = parseInt(document.querySelector('.height').value);
+        let width_ = parseInt(document.querySelector('.width').value);
+        let bombs_ = parseInt(document.querySelector('.bombs_number').value);
+        console.log(height, width, bombs)
+        if (isNaN(height_) || isNaN(width_) || isNaN(bombs_)) {
+            make_error('Некорректные введенные значения');
+            return;
+        }
 
         if (height < 8 || width < 8) {
             make_error('Число клеток по вертикали и горизонтали не может быть меньше 8')
