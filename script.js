@@ -77,11 +77,18 @@ function calculateCellWidth(cells, baseWidth20 = 60, baseWidth30 = 40) {
 function drawCells() {
     playSound(startSound);
     const scale = window.devicePixelRatio;
-    let cell_width = calculateCellWidth(Math.max(width, height))/scale;
-    
-    let check_number = 20;
+    let cell_width;
+    let class_name;
+    if (width > 24 || height > 24) {
+        cell_width = 60;
+        class_name = "game__cell"
+    } else {
+        cell_width = calculateCellWidth(Math.max(width, height))/scale;
+        
+        let check_number = 20;
+        class_name = (height < check_number && width < check_number) ? "game__cell" : "game__cell--mini";
+    }
     game.style.gridTemplateColumns = `repeat(${width}, ${cell_width}px)`;
-    let class_name = (height < check_number && width < check_number) ? "game__cell" : "game__cell--mini";
 
 
     for (let x = 0; x < height; x++) {
@@ -111,7 +118,7 @@ function drawCells() {
     }
     const gameResult = document.querySelector('.game_result');
     const parentWidth = game_result_container.offsetWidth;
-    gameResult.style.fontSize = `${parentWidth / 12}px`;
+    gameResult.style.fontSize = `${parentWidth / 16}px`;
 }
 
 function placeBombs(firstClickX, firstClickY) {
@@ -185,11 +192,14 @@ function createImage(src) {
     return element;
 }
 
-function visualizeBomb(cell) {
+function visualizeBomb(cell, animate = true) {
     let bomb_element = createImage('images/мина.png');
     bomb_element.classList.add('bomb-image');
     cell.append(bomb_element);
-
+    if (!animate) {
+        return;
+    }
+    
     let explosion_gif = new Image();
     explosion_gif.src = "images/explosion.gif";
     explosion_gif.classList.add('explosion_gif');
@@ -262,7 +272,11 @@ function game_lose() {
                             cell.textContent = ''
                         }
                         if (!cell.classList.contains('game__cell--bomb')) {
-                            visualizeBomb(cell)
+                            if (width < 40 && height < 40) {
+                                visualizeBomb(cell);
+                            } else {
+                                visualizeBomb(cell, false);
+                            }
                         }
 
                         cell.classList.add('game__cell--bomb');
@@ -299,15 +313,17 @@ function game_lose() {
             
             
             setTimeout(() => {
-                if (bomb_count > 0) {
-                    const duration = Math.min(1.5 / bomb_count, 1.5);
-    
-                    game.classList.add('screen-shake');
-                    game.style.setProperty('--explosion_duration', `${duration}s`)
-    
-                    setTimeout(() => {
-                        game.classList.remove('screen-shake');
-                    }, duration * 1000);
+                if (width < 40 && height < 40) {
+                    if (bomb_count > 0) {
+                        const duration = Math.min(1.5 / bomb_count, 1.5);
+        
+                        game.classList.add('screen-shake');
+                        game.style.setProperty('--explosion_duration', `${duration}s`)
+        
+                        setTimeout(() => {
+                            game.classList.remove('screen-shake');
+                        }, duration * 1000);
+                    }
                 }
             }, diagonal.length * 120)
         }, i * 200);
@@ -659,8 +675,6 @@ function openSettings() {
     modal.style.display = "block";
     modal.style.width = `${containerRect.width}px`;
     modal.style.height = `${containerRect.height}px`;
-    modal.style.top = `${containerRect.top}px`;
-    modal.style.left = `${containerRect.left}px`;
 }
 
 function toggleSoundImage() {
@@ -755,29 +769,28 @@ function applySettings() {
             make_error('Некорректные введенные значения');
             return;
         }
-
-        width = width_;
-        height = height_;
-        bombs = bombs_;
-
-        if (height < 8 || width < 8) {
+        
+        if (height_ < 8 || width_ < 8) {
             make_error('Число клеток по вертикали и горизонтали не может быть меньше 8')
             return;
         }
-        if (height > 30 || width > 30) {
-            make_error('Число клеток по вертикали и горизонтали не может превышать 30');
+        if (width_ > 100 || height_ > 100) {
+            make_error('Число клеток по вертикали горизонтали не может превышать 100');
             return;
         }
 
-        if (bombs < 1) {
+        if (bombs_ < 1) {
             make_error('Мин не может быть меньше чем 1!');
             return;
         }
-
-        if (bombs >= (height * width) * 0.8) {
+        
+        if (bombs >= (height_ * width_) * 0.8) {
             make_error('Количество мин не может быть таким большим!')
             return;
         }
+        width = width_;
+        height = height_;
+        bombs = bombs_;
     }
 
     hollow_cells = height * width - bombs;

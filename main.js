@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain } = require('electron');
+const { app, BrowserWindow, ipcMain, screen } = require('electron');
 const path = require("node:path");
 
 let mainWindow;
@@ -20,7 +20,21 @@ app.whenReady().then(() => {
 
   ipcMain.on('resize', (event, width, height) => {
     if (mainWindow) {
-      mainWindow.setBounds({ x: 0, y: 0, width, height });
+      const display = screen.getPrimaryDisplay();
+      const screenWidth = display.workAreaSize.width;
+      const screenHeight = display.workAreaSize.height;
+
+      if (width > screenWidth || height > screenHeight) {
+        mainWindow.setFullScreen(true);
+      } else {
+        mainWindow.setFullScreen(false);
+        mainWindow.setBounds({
+          x: Math.max(0, (screenWidth - width) / 2),
+          y: Math.max(0, (screenHeight - height) / 2),
+          width,
+          height,
+        });
+      }
     }
   });
 
