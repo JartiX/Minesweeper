@@ -59,7 +59,9 @@ let currentCellY = 0;
 
 let is_animating = false;
 
-let error_field = document.querySelector('.error_field')
+let error_field = document.querySelector('.error_field');
+
+let in_settings_menu = false;
     
 function drawCells() {
     playSound(startSound);
@@ -474,7 +476,7 @@ game.addEventListener('click', (e) => {
         reset_game();
         return;
     }
-    
+
     let cell = e.target;
     if (!cell.classList.contains('game__cell') && !cell.classList.contains('game__cell--mini')) return;
 
@@ -548,7 +550,7 @@ function openSurroundingCells(x, y) {
 }
 
 document.addEventListener('keydown', (e) => {
-    if (is_animating) return;
+    if (is_animating || in_settings_menu) return;
 
     if (e.ctrlKey && (e.key === 'Enter' || e.key === ' ')) {
         toggleFlag(currentCellX, currentCellY);
@@ -636,6 +638,7 @@ smile.addEventListener('mouseout', () => {
 });
 
 function openSettings() {
+    in_settings_menu = true;
     playSound(settingsSound);
     let modal = document.querySelector('.settings-modal');
 
@@ -692,6 +695,7 @@ function toggleSound() {
 }
 
 function closeSettings() {
+    in_settings_menu = false;
     playSound(clickSound);
     document.querySelector('.settings-modal').style.display = "none";
 }
