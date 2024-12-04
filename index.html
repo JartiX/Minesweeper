@@ -29,39 +29,41 @@
             </div>
         </div>
         <div class="game"></div>
-    </div>
-
-    <div id="settingsModal" class="settings-modal">
-        <div class="settings-content">
-            <span class="close" onclick="closeSettings()">&times;</span>
-            <h2>Настройки игры</h2>
-            <label for="difficulty">Выберите уровень сложности:</label>
-            <select class="difficulty" onchange="toggleCustomFields()">
-                <option value="easy">Легкий</option>
-                <option value="medium">Средний</option>
-                <option value="hard">Сложный</option>
-                <option value="custom">Кастомный</option>
-            </select>
-
-            <div class="customSettings" style="display:none;">
-                <label for="width">Ширина:</label>
-                <input type="number" class="width" value="12" min="8" max="50">
-                <label for="height">Высота:</label>
-                <input type="number" class="height" value="12" min="8" max="50">
-                <label for="bombs">Количество мин:</label>
-                <input type="number" class="bombs_number" value="20" min="1" max="150">
+        
+        <div id="settingsModal" class="settings-modal">
+            <div class="settings-content">
+                <span class="close" onclick="closeSettings()">&times;</span>
+                <h2>Настройки игры</h2>
+                <label for="difficulty">Выберите уровень сложности:</label>
+                <select class="difficulty" onchange="toggleCustomFields()">
+                    <option value="easy">Легкий</option>
+                    <option value="medium">Средний</option>
+                    <option value="hard">Сложный</option>
+                    <option value="custom">Кастомный</option>
+                </select>
+    
+                <div class="customSettings" style="display:none;">
+                    <label for="width">Ширина:</label>
+                    <input type="number" class="width" value="12" min="8" max="50">
+                    <label for="height">Высота:</label>
+                    <input type="number" class="height" value="12" min="8" max="50">
+                    <label for="bombs">Количество мин:</label>
+                    <input type="number" class="bombs_number" value="20" min="1" max="150">
+                </div>
+    
+                <label for="explosionVolume">Громкость взрывов:</label>
+                <input type="range" class="explosionVolume" min="0" max="1" step="0.01" value="0.04">
+                <p class="volumeDisplayP">Громкость: <span class="volumeDisplay">4%</span></p>
+    
+                <button onclick="applySettings()">Применить</button>
             </div>
-
-            <label for="explosionVolume">Громкость взрывов:</label>
-            <input type="range" class="explosionVolume" min="0" max="1" step="0.01" value="0.04">
-            <p class="volumeDisplayP">Громкость: <span class="volumeDisplay">4%</span></p>
-
-            <button onclick="applySettings()">Применить</button>
         </div>
     </div>
 
 
-    <script src="script.js"></script>
+
+    <script src="./script.js"></script>
+    <script src="./renderer.js"></script>
 </body>
 
 </html>

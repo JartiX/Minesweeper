@@ -60,8 +60,8 @@ let is_animating = false;
 
 function drawCells() {
     playSound(startSound);
-    game.style.gridTemplateColumns = (height <= 20 && width <= 20) ? `repeat(${width}, 40px)` : `repeat(${width}, 30px)`
-    let class_name = (height <= 20 && width <= 20) ? "game__cell" : "game__cell--mini";
+    game.style.gridTemplateColumns = (height < 20 && width < 20) ? `repeat(${width}, 40px)` : `repeat(${width}, 25px)`
+    let class_name = (height < 20 && width < 20) ? "game__cell" : "game__cell--mini";
 
     for (let x = 0; x < height; x++) {
         let bombRow = [];
@@ -592,7 +592,16 @@ smile.addEventListener('mouseout', () => {
 
 function openSettings() {
     playSound(settingsSound);
-    document.querySelector('.settings-modal').style.display = "block";
+    let modal = document.querySelector('.settings-modal');
+
+    const container = document.querySelector('.game_container');
+    const containerRect = container.getBoundingClientRect();
+
+    modal.style.display = "block";
+    modal.style.width = `${containerRect.width}px`;
+    modal.style.height = `${containerRect.height}px`;
+    modal.style.top = `${containerRect.top}px`;
+    modal.style.left = `${containerRect.left}px`;
 }
 
 function toggleSoundImage() {
