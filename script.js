@@ -116,9 +116,6 @@ function drawCells() {
         bombMap.push(bombRow);
         cellMap.push(cellRow);
     }
-    const gameResult = document.querySelector('.game_result');
-    const parentWidth = game_result_container.offsetWidth;
-    gameResult.style.fontSize = `${parentWidth / 16}px`;
 }
 
 function placeBombs(firstClickX, firstClickY) {
@@ -196,6 +193,19 @@ function visualizeBomb(cell, animate = true) {
     let bomb_element = createImage('images/мина.png');
     bomb_element.classList.add('bomb-image');
     cell.append(bomb_element);
+
+    if (bombs < 8000) {
+        let crash_number = Math.floor(Math.random() * 3) + 1;
+        let earth_crashed = createImage(`images/crashed_earth${crash_number}.png`);
+        earth_crashed.classList.add("crashed_earth");
+    
+        let darkening = document.createElement('div');
+        darkening.classList.add('darkening-effect');
+    
+        cell.append(darkening);
+        cell.append(earth_crashed)
+    }
+
     if (!animate) {
         return;
     }
@@ -208,15 +218,6 @@ function visualizeBomb(cell, animate = true) {
         explosion_gif.remove();
     }, 390);
 
-    let crash_number = Math.floor(Math.random() * 3) + 1;
-    let earth_crashed = createImage(`images/crashed_earth${crash_number}.png`);
-    earth_crashed.classList.add("crashed_earth");
-
-    let darkening = document.createElement('div');
-    darkening.classList.add('darkening-effect');
-
-    cell.append(darkening);
-    cell.append(earth_crashed)
 
     let explosion = document.createElement('div');
     explosion.classList.add('explosion');
@@ -229,8 +230,8 @@ function visualizeBomb(cell, animate = true) {
 
     setTimeout(() => explosion.remove(), 700);
 }
+
 function game_lose() {
-    is_animating = true;
     is_game_over = true;
     smile.innerHTML = '😵';
     game_result_container.querySelector('.game_result').style.visibility = 'visible';
@@ -238,6 +239,53 @@ function game_lose() {
     game_result_container.querySelector('.game_result').innerHTML = 'Вы проиграли!';
     clearInterval(timerInterval);
 
+    if (width > 30 || height > 30) {
+        for (let x = 0; x < height; x++) {
+            for (let y = 0; y < width; y++) {
+                const cell = cellMap[x][y];
+                const value = bombMap[x][y];
+
+                if (value === bomb_label) {
+                    if (cell.classList.contains('game__cell--flag')) {
+                        cell.textContent = '';
+                    }
+                    if (!cell.classList.contains('game__cell--bomb')) {
+                        visualizeBomb(cell, false);
+                    }
+
+                    cell.classList.add('game__cell--bomb');
+                    
+                } else {
+                    cell.classList.add('game__cell--lose');
+                    if (cell.classList.contains('game__cell--flag')) {
+                        cell.textContent = '';
+                        let container = document.createElement('div');
+
+                        container.classList.add('mine-container');
+
+                        let bomb_element = createImage('images/мина.png');
+                        bomb_element.classList.add('bomb-image');
+                        container.append(bomb_element);
+
+                        let cross = document.createElement('span');
+                        cross.textContent = '❌';
+                        container.append(cross);
+
+                        cell.append(container);
+                    }
+                    else if (value > 0) {
+                        cell.textContent = value;
+                        cell.style.color = value_colors[value];
+                    } else {
+                        cell.textContent = '';
+                    }
+                }
+            }
+        }
+        return;
+    }
+
+    is_animating = true;
     
     const diagonals = [];
     
@@ -272,11 +320,7 @@ function game_lose() {
                             cell.textContent = ''
                         }
                         if (!cell.classList.contains('game__cell--bomb')) {
-                            if (width < 40 && height < 40) {
-                                visualizeBomb(cell);
-                            } else {
-                                visualizeBomb(cell, false);
-                            }
+                            visualizeBomb(cell);
                         }
 
                         cell.classList.add('game__cell--bomb');
@@ -764,6 +808,7 @@ function applySettings() {
         let height_ = parseInt(document.querySelector('.height').value);
         let width_ = parseInt(document.querySelector('.width').value);
         let bombs_ = parseInt(document.querySelector('.bombs_number').value);
+        console.log(height_, width_, bombs_);
 
         if (isNaN(height_) || isNaN(width_) || isNaN(bombs_)) {
             make_error('Некорректные введенные значения');
@@ -774,8 +819,8 @@ function applySettings() {
             make_error('Число клеток по вертикали и горизонтали не может быть меньше 8')
             return;
         }
-        if (width_ > 100 || height_ > 100) {
-            make_error('Число клеток по вертикали горизонтали не может превышать 100');
+        if (width_ > 300 || height_ > 300) {
+            make_error('Число клеток по вертикали горизонтали не может превышать 300');
             return;
         }
 
@@ -784,7 +829,7 @@ function applySettings() {
             return;
         }
         
-        if (bombs >= (height_ * width_) * 0.8) {
+        if (bombs_ >= (height_ * width_) * 0.8) {
             make_error('Количество мин не может быть таким большим!')
             return;
         }

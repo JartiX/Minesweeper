@@ -1,5 +1,6 @@
-const { app, BrowserWindow, ipcMain, screen } = require('electron');
+const { app, BrowserWindow, ipcMain, screen, Menu } = require('electron');
 const path = require("node:path");
+const fs = require('fs');
 
 let mainWindow;
 
@@ -11,12 +12,39 @@ const createWindow = (width = 800, height = 600) => {
       preload: path.join(__dirname, 'preload.js'),
     }
   });
-
   mainWindow.loadFile('index.html');
 };
 
 app.whenReady().then(() => {
+  const userDataPath = app.getPath('userData');
+  fs.rmSync(userDataPath, { recursive: true, force: true });
+
   createWindow();
+
+  const menuTemplate = [
+    {
+      label: 'File',
+      submenu: [
+        { role: 'quit' },
+      ],
+    },
+    {
+      label: 'View',
+      submenu: [
+        { role: 'reload' },
+        { role: 'togglefullscreen' },
+      ],
+    },
+    {
+      label: 'Help',
+      submenu: [
+        { label: 'About' },
+      ],
+    },
+  ];
+
+  const menu = Menu.buildFromTemplate(menuTemplate);
+  Menu.setApplicationMenu(menu);
 
   ipcMain.on('resize', (event, width, height) => {
     if (mainWindow) {
@@ -35,6 +63,12 @@ app.whenReady().then(() => {
           height,
         });
       }
+    }
+  });
+
+  mainWindow.webContents.on('before-input-event', (event, input) => {
+    if (input.control && (input.key === '+' || input.key === '-' || input.key === '0' || input.type === 'mouseWheel')) {
+      event.preventDefault();
     }
   });
 
