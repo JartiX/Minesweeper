@@ -695,7 +695,8 @@ document.addEventListener('keydown', (e) => {
                 const startEvent = new CustomEvent('mine.start');
                 game.dispatchEvent(startEvent);
             }
-
+            let x = currentCellX;
+            let y = currentCellY;
             const stepEvent = new CustomEvent('mine.step', {
                 detail: { x, y }
             });
