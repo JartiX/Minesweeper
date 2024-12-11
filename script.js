@@ -379,9 +379,9 @@ game.addEventListener('mine.start', () => {
 });
 
 game.addEventListener('mine.step', (e) => {
-    const { cell } = e.detail;
-    let x = parseInt(cell.dataset.x);
-    let y = parseInt(cell.dataset.y);
+    const { x, y } = e.detail;
+    let cell = cellMap[x][y]
+
     console.log(`Step made at coordinates: (${x}, ${y})`);
 
     if (!cell.classList.contains('game__cell--open')) openCell(x, y);
@@ -591,7 +591,7 @@ game.addEventListener('click', (e) => {
     updateSelectedCell();
 
     const stepEvent = new CustomEvent('mine.step', {
-        detail: { cell }
+        detail: { x, y }
     });
     game.dispatchEvent(stepEvent);
 });
@@ -696,9 +696,8 @@ document.addEventListener('keydown', (e) => {
                 game.dispatchEvent(startEvent);
             }
 
-            let cell = cellMap[currentCellX][currentCellY]
             const stepEvent = new CustomEvent('mine.step', {
-                detail: { cell }
+                detail: { x, y }
             });
             game.dispatchEvent(stepEvent);
 
