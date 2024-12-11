@@ -231,182 +231,6 @@ function visualizeBomb(cell, animate = true) {
     setTimeout(() => explosion.remove(), 700);
 }
 
-function game_lose() {
-    is_game_over = true;
-    smile.innerHTML = '😵';
-    game_result_container.querySelector('.game_result').style.visibility = 'visible';
-    game_result_container.querySelector('.game_result').style.color = 'red';
-    game_result_container.querySelector('.game_result').innerHTML = 'Вы проиграли!';
-    clearInterval(timerInterval);
-
-    if (width > 30 || height > 30) {
-        for (let x = 0; x < height; x++) {
-            for (let y = 0; y < width; y++) {
-                const cell = cellMap[x][y];
-                const value = bombMap[x][y];
-
-                if (value === bomb_label) {
-                    if (cell.classList.contains('game__cell--flag')) {
-                        cell.textContent = '';
-                    }
-                    if (!cell.classList.contains('game__cell--bomb')) {
-                        visualizeBomb(cell, false);
-                    }
-
-                    cell.classList.add('game__cell--bomb');
-                    
-                } else {
-                    cell.classList.add('game__cell--lose');
-                    if (cell.classList.contains('game__cell--flag')) {
-                        cell.textContent = '';
-                        let container = document.createElement('div');
-
-                        container.classList.add('mine-container');
-
-                        let bomb_element = createImage('images/мина.png');
-                        bomb_element.classList.add('bomb-image');
-                        container.append(bomb_element);
-
-                        let cross = document.createElement('span');
-                        cross.textContent = '❌';
-                        container.append(cross);
-
-                        cell.append(container);
-                    }
-                    else if (value > 0) {
-                        cell.textContent = value;
-                        cell.style.color = value_colors[value];
-                    } else {
-                        cell.textContent = '';
-                    }
-                }
-            }
-        }
-        return;
-    }
-
-    is_animating = true;
-    
-    const diagonals = [];
-    
-    for (let d = 0; d < height + width - 1; d++) {
-        diagonals[d] = [];
-    }
-
-    for (let x = 0; x < height; x++) {
-        for (let y = 0; y < width; y++) {
-            diagonals[x + y].push({ x, y });
-        }
-    }
-
-    diagonals.forEach((diagonal, i) => {
-        setTimeout(() => {
-            if (!is_animating) return;
-            
-            let bomb_count = 0;
-            
-            diagonal.forEach(({ x, y }) => {
-                const cell = cellMap[x][y];
-                const value = bombMap[x][y];
-                
-                cell.classList.add('game__cell--lose__anim');
-
-                setTimeout(() => {
-                    if (!is_animating) return;
-
-                    if (value === bomb_label) {
-                        bomb_count++;
-                        if (cell.classList.contains('game__cell--flag')) {
-                            cell.textContent = ''
-                        }
-                        if (!cell.classList.contains('game__cell--bomb')) {
-                            visualizeBomb(cell);
-                        }
-
-                        cell.classList.add('game__cell--bomb');
-                        
-                        playSound(explosionSound);
-                        
-                    } else {
-                        cell.classList.add('game__cell--lose');
-                        if (cell.classList.contains('game__cell--flag')) {
-                            cell.textContent = '';
-                            let container = document.createElement('div');
-
-                            container.classList.add('mine-container');
-
-                            let bomb_element = createImage('images/мина.png');
-                            bomb_element.classList.add('bomb-image');
-                            container.append(bomb_element);
-
-                            let cross = document.createElement('span');
-                            cross.textContent = '❌';
-                            container.append(cross);
-
-                            cell.append(container);
-                        }
-                        else if (value > 0) {
-                            cell.textContent = value;
-                            cell.style.color = value_colors[value];
-                        } else {
-                            cell.textContent = '';
-                        }
-                    }
-                }, 300);
-            });
-            
-            
-            setTimeout(() => {
-                if (width < 40 && height < 40) {
-                    if (bomb_count > 0) {
-                        const duration = Math.min(1.5 / bomb_count, 1.5);
-        
-                        game.classList.add('screen-shake');
-                        game.style.setProperty('--explosion_duration', `${duration}s`)
-        
-                        setTimeout(() => {
-                            game.classList.remove('screen-shake');
-                        }, duration * 1000);
-                    }
-                }
-            }, diagonal.length * 120)
-        }, i * 200);
-    });
-
-    setTimeout(() => {
-        is_animating = false;
-    }, (diagonals.length+1) * 200);
-}
-
-
-
-
-function game_win() {
-    clearInterval(timerInterval);
-    playSound(winSound);
-    for (let x = 0; x < height; x++) {
-        for (let y = 0; y < width; y++) {
-            if (bombMap[x][y] == bomb_label) {
-                if (cellMap[x][y].classList.contains('game__cell--flag')) cellMap[x][y].textContent = '';
-                bomb_element = createImage('images/мина.png');
-                bomb_element.classList.add('bomb-image');
-
-                cellMap[x][y].append(bomb_element);
-                cellMap[x][y].classList.add('game__cell--bomb--win');
-            } else {
-                cellMap[x][y].classList.add('game__cell--win');
-            }
-        }
-    }
-
-    triggerConfetti();
-
-    is_game_over = true;
-    smile.innerHTML = '🥳';
-    game_result_container.querySelector('.game_result').style.visibility = 'visible';
-    game_result_container.querySelector('.game_result').style.color = 'green';
-    game_result_container.querySelector('.game_result').innerHTML = 'Вы выиграли!';
-}
 
 function triggerConfetti() {
     let confettiContainer = document.createElement('div');
@@ -474,13 +298,15 @@ function openCell(x, y, is_recursive_call=false) {
 
     cell.classList.add('game__cell--open');
     let value = bombMap[x][y];
-
     if (value === bomb_label && !is_recursive_call) {
         visualizeBomb(cell)
         cell.classList.add('game__cell--bomb');
         cell.style.backgroundColor = 'red';
         playSound(explosionSound);
-        game_lose();
+        const endEvent = new CustomEvent('mine.end', {
+            detail: { result: 'lose' }
+        });
+        game.dispatchEvent(endEvent);
         return;
 
     } else if (value > 0) {
@@ -501,7 +327,10 @@ function openCell(x, y, is_recursive_call=false) {
     opened_cells++;
 
     if (opened_cells === hollow_cells) {
-        game_win();
+        const endEvent = new CustomEvent('mine.end', {
+            detail: { result: 'win' }
+        });
+        game.dispatchEvent(endEvent);
     }
 }
 
@@ -540,6 +369,201 @@ function toggleFlag(x, y) {
 
 drawCells();
 
+
+game.addEventListener('mine.start', () => {
+    console.log('Game started');
+    gameStarted = true;
+    is_game_over = false;
+    start_timer();
+
+});
+
+game.addEventListener('mine.step', (e) => {
+    const { cell } = e.detail;
+    let x = parseInt(cell.dataset.x);
+    let y = parseInt(cell.dataset.y);
+    console.log(`Step made at coordinates: (${x}, ${y})`);
+
+    if (!cell.classList.contains('game__cell--open')) openCell(x, y);
+    else if (bombMap[x][y] > 0) openSurroundingCells(x, y);
+});
+
+game.addEventListener('mine.end', (e) => {
+    const { result } = e.detail;
+    console.log(`Game ended with result: ${result}`);
+    is_game_over = true;
+
+    if (result === "lose") { // Lose
+        smile.innerHTML = '😵';
+        game_result_container.querySelector('.game_result').style.visibility = 'visible';
+        game_result_container.querySelector('.game_result').style.color = 'red';
+        game_result_container.querySelector('.game_result').innerHTML = 'Вы проиграли!';
+        clearInterval(timerInterval);
+
+        if (width > 30 || height > 30) {
+            for (let x = 0; x < height; x++) {
+                for (let y = 0; y < width; y++) {
+                    const cell = cellMap[x][y];
+                    const value = bombMap[x][y];
+
+                    if (value === bomb_label) {
+                        if (cell.classList.contains('game__cell--flag')) {
+                            cell.textContent = '';
+                        }
+                        if (!cell.classList.contains('game__cell--bomb')) {
+                            visualizeBomb(cell, false);
+                        }
+
+                        cell.classList.add('game__cell--bomb');
+                        
+                    } else {
+                        cell.classList.add('game__cell--lose');
+                        if (cell.classList.contains('game__cell--flag')) {
+                            cell.textContent = '';
+                            let container = document.createElement('div');
+
+                            container.classList.add('mine-container');
+
+                            let bomb_element = createImage('images/мина.png');
+                            bomb_element.classList.add('bomb-image');
+                            container.append(bomb_element);
+
+                            let cross = document.createElement('span');
+                            cross.textContent = '❌';
+                            container.append(cross);
+
+                            cell.append(container);
+                        }
+                        else if (value > 0) {
+                            cell.textContent = value;
+                            cell.style.color = value_colors[value];
+                        } else {
+                            cell.textContent = '';
+                        }
+                    }
+                }
+            }
+            return;
+        }
+
+        is_animating = true;
+        
+        const diagonals = [];
+        
+        for (let d = 0; d < height + width - 1; d++) {
+            diagonals[d] = [];
+        }
+
+        for (let x = 0; x < height; x++) {
+            for (let y = 0; y < width; y++) {
+                diagonals[x + y].push({ x, y });
+            }
+        }
+
+        diagonals.forEach((diagonal, i) => {
+            setTimeout(() => {
+                if (!is_animating) return;
+                
+                let bomb_count = 0;
+                
+                diagonal.forEach(({ x, y }) => {
+                    const cell = cellMap[x][y];
+                    const value = bombMap[x][y];
+                    
+                    cell.classList.add('game__cell--lose__anim');
+
+                    setTimeout(() => {
+                        if (!is_animating) return;
+
+                        if (value === bomb_label) {
+                            bomb_count++;
+                            if (cell.classList.contains('game__cell--flag')) {
+                                cell.textContent = ''
+                            }
+                            if (!cell.classList.contains('game__cell--bomb')) {
+                                visualizeBomb(cell);
+                            }
+
+                            cell.classList.add('game__cell--bomb');
+                            
+                            playSound(explosionSound);
+                            
+                        } else {
+                            cell.classList.add('game__cell--lose');
+                            if (cell.classList.contains('game__cell--flag')) {
+                                cell.textContent = '';
+                                let container = document.createElement('div');
+
+                                container.classList.add('mine-container');
+
+                                let bomb_element = createImage('images/мина.png');
+                                bomb_element.classList.add('bomb-image');
+                                container.append(bomb_element);
+
+                                let cross = document.createElement('span');
+                                cross.textContent = '❌';
+                                container.append(cross);
+
+                                cell.append(container);
+                            }
+                            else if (value > 0) {
+                                cell.textContent = value;
+                                cell.style.color = value_colors[value];
+                            } else {
+                                cell.textContent = '';
+                            }
+                        }
+                    }, 300);
+                });
+                
+                
+                setTimeout(() => {
+                    if (width < 40 && height < 40) {
+                        if (bomb_count > 0) {
+                            const duration = Math.min(1.5 / bomb_count, 1.5);
+            
+                            game.classList.add('screen-shake');
+                            game.style.setProperty('--explosion_duration', `${duration}s`)
+            
+                            setTimeout(() => {
+                                game.classList.remove('screen-shake');
+                            }, duration * 1000);
+                        }
+                    }
+                }, diagonal.length * 120)
+            }, i * 200);
+        });
+
+        setTimeout(() => {
+            is_animating = false;
+        }, (diagonals.length+1) * 200);
+    } else { // Win
+        clearInterval(timerInterval);
+        playSound(winSound);
+
+        for (let x = 0; x < height; x++) {
+            for (let y = 0; y < width; y++) {
+                if (bombMap[x][y] == bomb_label) {
+                    if (cellMap[x][y].classList.contains('game__cell--flag')) cellMap[x][y].textContent = '';
+                    bomb_element = createImage('images/мина.png');
+                    bomb_element.classList.add('bomb-image');
+
+                    cellMap[x][y].append(bomb_element);
+                    cellMap[x][y].classList.add('game__cell--bomb--win');
+                } else {
+                    cellMap[x][y].classList.add('game__cell--win');
+                }
+            }
+        }
+        triggerConfetti();
+        
+        smile.innerHTML = '🥳';
+        game_result_container.querySelector('.game_result').style.visibility = 'visible';
+        game_result_container.querySelector('.game_result').style.color = 'green';
+        game_result_container.querySelector('.game_result').innerHTML = 'Вы выиграли!';
+    }
+});
+
 game.addEventListener('click', (e) => {
     if (is_animating) return;
 
@@ -558,17 +582,18 @@ game.addEventListener('click', (e) => {
     if (!gameStarted || is_game_over) {
         placeBombs(x, y);
         bombs_cnt.querySelector('.mine_counter').innerHTML = bombs;
-        gameStarted = true;
-        is_game_over = false;
-        start_timer();
+        const startEvent = new CustomEvent('mine.start');
+        game.dispatchEvent(startEvent);
     }
     removeSelectedCell();
     currentCellX = x;
     currentCellY = y;
     updateSelectedCell();
 
-    if (!cell.classList.contains('game__cell--open')) openCell(x, y);
-    else if (bombMap[x][y] > 0) openSurroundingCells(x, y);
+    const stepEvent = new CustomEvent('mine.step', {
+        detail: { cell }
+    });
+    game.dispatchEvent(stepEvent);
 });
 
 game.addEventListener('contextmenu', (e) => {
@@ -666,17 +691,17 @@ document.addEventListener('keydown', (e) => {
 
             if (!gameStarted || is_game_over) {
                 placeBombs(currentCellX, currentCellY);
-                bombs_cnt.querySelector('.mine_counter').innerHTML = bombs
-                gameStarted = true;
-                is_game_over = false;
-                start_timer();
+                bombs_cnt.querySelector('.mine_counter').innerHTML = bombs;
+                const startEvent = new CustomEvent('mine.start');
+                game.dispatchEvent(startEvent);
             }
 
-            if (cellMap[currentCellX][currentCellY].classList.contains('game__cell--open') && bombMap[currentCellX][currentCellY] > 0) {
-                openSurroundingCells(currentCellX, currentCellY);
-            }
+            let cell = cellMap[currentCellX][currentCellY]
+            const stepEvent = new CustomEvent('mine.step', {
+                detail: { cell }
+            });
+            game.dispatchEvent(stepEvent);
 
-            openCell(currentCellX, currentCellY);
             break;
     }
 });
@@ -808,7 +833,6 @@ function applySettings() {
         let height_ = parseInt(document.querySelector('.height').value);
         let width_ = parseInt(document.querySelector('.width').value);
         let bombs_ = parseInt(document.querySelector('.bombs_number').value);
-        console.log(height_, width_, bombs_);
 
         if (isNaN(height_) || isNaN(width_) || isNaN(bombs_)) {
             make_error('Некорректные введенные значения');
